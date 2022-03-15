@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "sim_plon_api"
+version = "0.0.0"
+description = "Simulated simplon api"
+authors = ["Francisco Hernandez Vivanco <hernandf@ansto.gov.au>",
+           "Daniel Eriksson <daniele@ansto.gov.au>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.70.1"
+numpy = "1.22.0"
+pyzmq = "^22.3.0"
+h5py = "^3.6.0"
+hdf5plugin = "^3.2.0"
+uvicorn = "^0.16.0"
+lz4 = "^4.0.0"
+tqdm = "^4.63.0"
+cbor2 = "^5.4.2"
+Cython = "^0.29.28"
+bitshuffle = {git = "https://github.com/kiyo-masui/bitshuffle.git"}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
