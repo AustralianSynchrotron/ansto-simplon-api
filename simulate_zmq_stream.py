@@ -1,13 +1,14 @@
-import zmq
-import numpy as np
-import h5py
-import hdf5plugin
 import logging
-from tqdm import tqdm, trange
-import lz4.frame
-import cbor2
 import time
+
 import bitshuffle
+import cbor2
+import h5py
+import lz4.frame
+import numpy as np
+import zmq
+from tqdm import tqdm, trange
+
 from parse_master_file import Parse
 
 logging.basicConfig(level=logging.DEBUG)
@@ -21,10 +22,12 @@ class ZmqStream:
     """
 
     def __init__(
-            self, address: str,
-            hdf5_file_path: str,
-            compression: str = "bslz4",
-            delay_between_frames: float = 0.1) -> None:
+        self,
+        address: str,
+        hdf5_file_path: str,
+        compression: str = "bslz4",
+        delay_between_frames: float = 0.1,
+    ) -> None:
         """
         Parameters
         ----------
@@ -55,11 +58,13 @@ class ZmqStream:
 
         logging.info("Loading dataset...")
         self.frames = self.create_list_of_compressed_frames(
-            self.hdf5_file_path, self.compression)
+            self.hdf5_file_path, self.compression
+        )
         logging.info("Dataset loaded")
 
     def create_list_of_compressed_frames(
-            self, hdf5_file_path: str, compression: str) -> list[bytes]:
+        self, hdf5_file_path: str, compression: str
+    ) -> list[bytes]:
         """
         Creates a list of compressed frames from a hdf5 file
 
@@ -90,8 +95,9 @@ class ZmqStream:
 
         # Would make more sense in the __init__ section
         # but then we'd need to read the file twice
-        self.start_message, self.image_message,\
-            self.end_message = Parse(hdf5_file).header()
+        self.start_message, self.image_message, self.end_message = Parse(
+            hdf5_file
+        ).header()
 
         # Delete the hdf5_file, we got what we needed
         del hdf5_file
@@ -102,8 +108,7 @@ class ZmqStream:
 
         frame_list = []
         if compression == "lz4":
-            logging.info(
-                "Compression type: {self.compression}. Compressing data...")
+            logging.info("Compression type: {self.compression}. Compressing data...")
 
             for ii in trange(number_of_frames):
                 image = lz4.frame.compress(frame_array[ii])
@@ -117,8 +122,7 @@ class ZmqStream:
                 frame_list.append(cbor2.dumps(image_message))
 
         elif compression == "bslz4":
-            logging.info(
-                "Compression type: {self.compression}. Compressing data...")
+            logging.info("Compression type: {self.compression}. Compressing data...")
 
             for ii in trange(number_of_frames):
                 image = bitshuffle.compress_lz4(frame_array[ii]).tobytes()
@@ -131,12 +135,11 @@ class ZmqStream:
                 frame_list.append(cbor2.dumps(image_message))
 
         else:
-            raise Exception(f"The allowed compression types are lz4 and bslz4")
+            raise Exception("The allowed compression types are lz4 and bslz4")
 
         return frame_list
 
-    def stream_frames(
-            self, compressed_image_list: list[bytes]) -> None:
+    def stream_frames(self, compressed_image_list: list[bytes]) -> None:
         """Send images through a ZeroMQ stream
 
         Parameters
@@ -155,7 +158,7 @@ class ZmqStream:
             time.sleep(self.delay_between_frames)
             self.socket.send(image)
 
-        frame_rate = len(compressed_image_list)/(time.time() - t)
+        frame_rate = len(compressed_image_list) / (time.time() - t)
         logging.info(f"Frame rate: {frame_rate} frames / s")
 
     def stream_start_message(self) -> None:
