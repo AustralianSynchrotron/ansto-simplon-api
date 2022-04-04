@@ -19,6 +19,29 @@ cbor2 = "^5.4.2"
 Cython = "^0.29.28"
 bitshuffle = {git = "https://github.com/kiyo-masui/bitshuffle.git"}
 
+[tool.poetry.dev-dependencies]
+pre-commit = "^2.17.0"
+flake8 = "^4.0.1"
+black = "^22.1.0"
+isort = "^5.10.1"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
