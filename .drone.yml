@@ -14,9 +14,11 @@ steps:
   - name: pylint
     image: python:3.9
     commands:
+      - apt update
+      - apt install -y gcc libhdf5-serial-dev
       - python -m pip install poetry --user
       - python -m poetry install
-      - python -m poetry run pre-commit run -a
+      - python -m poetry run pre-commit run --all-files
 
   - name: docker-push-dev
     image: plugins/docker
