@@ -1,0 +1,204 @@
+---
+kind: pipeline
+type: kubernetes
+name: new-commit
+trigger:
+  ref:
+    - refs/heads/main
+steps:
+  - name: test
+    image: alpine
+    commands:
+      - env | sort
+
+  - name: pylint
+    image: python:3.9
+    commands:
+      - python -m pip install poetry --user
+      - python -m poetry install
+      - python -m poetry run pre-commit run --all-files
+
+  - name: docker-push-dev
+    image: plugins/docker
+    settings:
+      username:
+        from_secret: dockerHubAccount
+      password:
+        from_secret: dockerHubPassword
+      repo: docker.asci.synchrotron.org.au/${DRONE_REPO,,}
+      cache_from: docker.asci.synchrotron.org.au/${DRONE_REPO,,}:main
+      tag: main
+      mtu: 1480
+      build_args:
+        - BUILD_GIT_BRANCH=${DRONE_COMMIT_BRANCH}
+        - BUILD_GIT_COMMIT=${DRONE_COMMIT}
+        - BUILD_GIT_AUTHOR=${DRONE_COMMIT_AUTHOR}
+        - BUILD_GIT_AUTHOR_NAME=${DRONE_COMMIT_AUTHOR_NAME}
+        - BUILD_GIT_REPO_LINK=${DRONE_REPO_LINK}
+        - BUILD_CREATED=${DRONE_BUILD_CREATED}
+        - BUILD_NUMBER=${DRONE_BUILD_NUMBER}
+
+  - name: notify-docker-push
+    image: alpine
+    when:
+      status: [success, failure]
+    environment:
+      ROCKET_CI_CHANNEL:
+        from_secret: rocketCIChannel
+      DOCKER_SERVER:
+        from_secret: dockerServer
+    commands:
+      - export FORMAT_MSG=$(printf _"$DRONE_COMMIT_MESSAGE"_ | sed ':a;N;$!ba;s/\n/ \\\n /g')
+      - |
+        head -c -1 << EOF > .template.json
+        {
+          "channel": "$ROCKET_CI_CHANNEL",
+          "text": "Build ${DRONE_BUILD_NUMBER} of **${DRONE_REPO,,} (${DRONE_BRANCH})** is a [{{build.status}}](${DRONE_BUILD_LINK}) {{#success build.status}} :tada: {{else}} :exclamation: {{/success}}",
+          "attachments": [
+            {
+              "author_name": "${DRONE_COMMIT_AUTHOR_NAME}",
+              "fields": [
+              {
+                "short": false,
+                "title": "",
+                "value": "$FORMAT_MSG"
+              },
+              {
+                "short": false,
+                "title": "",
+                "value": "{{#success build.status}} Pushed ${DRONE_BRANCH} to the [docker]($DOCKER_SERVER/#!/taglist/${DRONE_REPO,,}) registry. {{else}} Please check the commit and/or infrastructure. {{/success}}"
+              }
+            ],
+            "color": "{{#success build.status}} #30b886 {{else}} #a30100 {{/success}}"
+            }
+          ]
+        }
+        EOF
+
+  - name: chat-notify
+    image: plugins/webhook
+    when:
+      status: [success, failure]
+    settings:
+      urls:
+        from_secret: rocketCIWebhook
+      content_type: application/json
+      template: file:///drone/src/.template.json
+---
+kind: pipeline
+type: kubernetes
+name: new-release
+trigger:
+  ref:
+    - refs/tags/*
+steps:
+  - name: test
+    image: alpine
+    commands:
+      - env | sort
+
+  - name: pylint
+    image: python:3.9
+    commands:
+      - python -m pip install poetry --user
+      - python -m poetry install
+      - python -m poetry run pre-commit run --all-files
+
+  - name: docker-push-prod
+    image: plugins/docker
+    settings:
+      username:
+        from_secret: dockerHubAccount
+      password:
+        from_secret: dockerHubPassword
+      repo: docker.asci.synchrotron.org.au/${DRONE_REPO,,}
+      cache_from: docker.asci.synchrotron.org.au/${DRONE_REPO,,}:latest
+      tags:
+        - latest
+        - ${DRONE_TAG}-${DRONE_BUILD_NUMBER}
+      mtu: 1480
+      build_args:
+        - BUILD_GIT_BRANCH=${DRONE_COMMIT_BRANCH}
+        - BUILD_GIT_COMMIT=${DRONE_COMMIT}
+        - BUILD_GIT_AUTHOR=${DRONE_COMMIT_AUTHOR}
+        - BUILD_GIT_AUTHOR_NAME=${DRONE_COMMIT_AUTHOR_NAME}
+        - BUILD_GIT_REPO_LINK=${DRONE_REPO_LINK}
+        - BUILD_CREATED=${DRONE_BUILD_CREATED}
+        - BUILD_NUMBER=${DRONE_BUILD_NUMBER}
+
+  - name: notify-docker-release
+    image: alpine
+    when:
+      status: [success, failure]
+    environment:
+      ROCKET_CI_CHANNEL:
+        from_secret: rocketCIChannel
+      DOCKER_SERVER:
+        from_secret: dockerServer
+    commands:
+      - export FORMAT_MSG=$(printf _"$DRONE_COMMIT_MESSAGE"_ | sed ':a;N;$!ba;s/\n/ \\\n /g')
+      - |
+        head -c -1 << EOF > .template.json
+        {
+          "channel": "$ROCKET_CI_CHANNEL",
+          "text": "Build ${DRONE_BUILD_NUMBER} of **${DRONE_REPO,,} (${DRONE_BRANCH})** is a [{{build.status}}](${DRONE_BUILD_LINK}) {{#success build.status}} :tada: {{else}} :exclamation: {{/success}}",
+          "attachments": [
+            {
+              "author_name": "${DRONE_COMMIT_AUTHOR_NAME}",
+              "fields": [
+              {
+                "short": false,
+                "title": "",
+                "value": "$FORMAT_MSG"
+              },
+              {
+                "short": false,
+                "title": "",
+                "value": "{{#success build.status}} Pushed ${DRONE_BRANCH} to the [docker]($DOCKER_SERVER/#!/taglist/${DRONE_REPO,,}) registry. {{else}} Please check the commit and/or infrastructure. {{/success}}"
+              }
+            ],
+            "color": "{{#success build.status}} #30b886 {{else}} #a30100 {{/success}}"
+            }
+          ]
+        }
+        EOF
+
+  - name: chat-notify
+    image: plugins/webhook
+    when:
+      status: [success, failure]
+    settings:
+      urls:
+        from_secret: rocketCIWebhook
+      content_type: application/json
+      template: file:///drone/src/.template.json
+---
+kind: secret
+name: rocketCIWebhook
+get:
+  path: asci-cicd-prod
+  name: rocketCIWebhook
+---
+kind: secret
+name: rocketCIChannel
+get:
+  path: asci-cicd-prod
+  name: rocketCIChannel
+---
+kind: secret
+name: dockerServer
+get:
+  path: asci-cicd-prod
+  name: dockerServer
+---
+kind: secret
+name: dockerHubAccount
+get:
+  path: asci-cicd-prod
+  name: dockerHubAccount
+---
+kind: secret
+name: dockerHubPassword
+get:
+  path: asci-cicd-prod
+  name: dockerHubPassword
