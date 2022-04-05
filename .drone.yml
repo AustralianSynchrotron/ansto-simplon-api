@@ -16,7 +16,7 @@ steps:
     commands:
       - python -m pip install poetry --user
       - python -m poetry install
-      - python -m poetry run pre-commit run --all-files
+      - python -m poetry run pre-commit run -a
 
   - name: docker-push-dev
     image: plugins/docker
