@@ -1,7 +1,9 @@
-from fastapi import FastAPI
-from simulate_zmq_stream import ZmqStream
-import numpy as np
 import glob
+
+import numpy as np
+from fastapi import FastAPI
+
+from simulate_zmq_stream import ZmqStream
 
 app = FastAPI()
 
