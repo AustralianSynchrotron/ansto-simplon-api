@@ -4,6 +4,7 @@ import time
 import bitshuffle
 import cbor2
 import h5py
+import hdf5plugin  # noqa
 import lz4.frame
 import numpy as np
 import zmq
