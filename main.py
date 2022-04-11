@@ -23,8 +23,8 @@ def trigger():
 
 @app.put("/detector/api/1.8.0/command/arm")
 def arm():
-    # We return a random sequence id number
-    return {"sequence id": np.random.randint(0, 1000)}
+    stream.sequence_id += 1
+    return {"sequence id": stream.sequence_id}
 
 
 @app.put("/detector/api/1.8.0/command/disarm")
