@@ -105,7 +105,9 @@ class ZmqStream:
         # Delete the hdf5_file, we got what we needed
         del hdf5_file
 
-        number_of_frames = frame_array.shape[0]
+        # FIXME: We just need one frome for rastering
+        # number_of_frames = frame_array.shape[0]
+        number_of_frames = 1
         array_shape = frame_array[0].shape
         dtype = frame_array.dtype
 
@@ -113,37 +115,31 @@ class ZmqStream:
         if compression == "lz4":
             logging.info("Compression type: {self.compression}. Compressing data...")
 
-            # for ii in trange(number_of_frames):
-            ii = 0
-            image = lz4.frame.compress(frame_array[ii])
-            # Copy image message template
-            image_message = self.image_message
-            # Fill in missing bits.
-            image_message["channels"][0]["data"] = image
-            image_message["channels"][0]["compression"] = "lz4"
-            image_message["channels"][0]["data_type"] = str(dtype)
-            image_message["channels"][0]["array_shape"] = array_shape
+            for ii in trange(number_of_frames):
+                image = lz4.frame.compress(frame_array[ii])
+                # Copy image message template
+                image_message = self.image_message
+                # Fill in missing bits.
+                image_message["channels"][0]["data"] = image
+                image_message["channels"][0]["compression"] = "lz4"
+                image_message["channels"][0]["data_type"] = str(dtype)
+                image_message["channels"][0]["array_shape"] = array_shape
 
-            # Add simulated series number, aka, sequence_id
-            image_message["series_number"] = self.sequence_id
-            frame_list.append(cbor2.dumps(image_message))
+                frame_list.append(image_message)
 
         elif compression == "bslz4":
             logging.info("Compression type: {self.compression}. Compressing data...")
 
-            # for ii in trange(number_of_frames):
-            ii = 0
-            image = bitshuffle.compress_lz4(frame_array[ii]).tobytes()
-            image_message = self.image_message
-            # Fill in missing bits.
-            image_message["channels"][0]["data"] = image
-            image_message["channels"][0]["compression"] = "bslz4"
-            image_message["channels"][0]["data_type"] = str(dtype)
-            image_message["channels"][0]["array_shape"] = array_shape
+            for ii in trange(number_of_frames):
+                image = bitshuffle.compress_lz4(frame_array[ii]).tobytes()
+                image_message = self.image_message
+                # Fill in missing bits.
+                image_message["channels"][0]["data"] = image
+                image_message["channels"][0]["compression"] = "bslz4"
+                image_message["channels"][0]["data_type"] = str(dtype)
+                image_message["channels"][0]["array_shape"] = array_shape
 
-            # Add simulated series number, aka, sequence_id
-            image_message["series_number"] = self.sequence_id
-            frame_list.append(cbor2.dumps(image_message))
+                frame_list.append(image_message)
 
         else:
             raise Exception("The allowed compression types are lz4 and bslz4")
@@ -167,7 +163,10 @@ class ZmqStream:
         t = time.time()
         for image in tqdm(compressed_image_list):
             time.sleep(self.delay_between_frames)
-            self.socket.send(image)
+
+            # Add series number
+            image["series_number"] = self.sequence_id
+            self.socket.send(cbor2.dumps(image))
 
         frame_rate = len(compressed_image_list) / (time.time() - t)
         logging.info(f"Frame rate: {frame_rate} frames / s")
@@ -218,20 +217,19 @@ class ZmqStream:
     @property
     def sequence_id(self) -> int:
         """
-        Gets the state of the hardware object.
+        Gets the sequence_id
 
         Returns
         -------
-        self._value: str
-            The state of the HO
+        self._sequence_id: int
+            The sequence_id
         """
         return self._sequence_id
 
     @sequence_id.setter
     def sequence_id(self, value: int) -> None:
         """
-        Sets the state of the hardware object. Three states are accepted:
-        ON, RUNNING and OPEN
+        Sets the sequence_id
 
         Returns
         -------
