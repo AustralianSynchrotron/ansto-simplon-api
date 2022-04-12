@@ -67,7 +67,7 @@ class ZmqStream:
 
     def create_list_of_compressed_frames(
         self, hdf5_file_path: str, compression: str
-    ) -> list[bytes]:
+    ) -> list[dict]:
         """
         Creates a list of compressed frames from a hdf5 file
 
@@ -86,8 +86,8 @@ class ZmqStream:
 
         Returns
         -------
-        frame_list : list[bytes]
-            A list containing an encoded dictionary of compressed frames, and
+        frame_list : list[dict]
+            A list containing a dictionary of compressed frames, and
             frame metadata
         """
 
