@@ -9,6 +9,7 @@ import lz4.frame
 import numpy as np
 import zmq
 from tqdm import tqdm, trange
+from copy import deepcopy
 
 from parse_master_file import Parse
 
@@ -111,8 +112,6 @@ class ZmqStream:
         del hdf5_file
 
         number_of_frames = frame_array.shape[0]
-        logging.info(f"number_of_frames {number_of_frames}")
-        logging.info(f"number_of_frames {frame_array.shape}")
         array_shape = frame_array[0].shape
         dtype = frame_array.dtype
 
@@ -122,8 +121,8 @@ class ZmqStream:
 
             for ii in trange(number_of_frames):
                 image = lz4.frame.compress(frame_array[ii])
-                # Copy image message template
-                image_message = self.image_message
+                # Deepcopy image message template
+                image_message = deepcopy(self.image_message)
                 # Fill in missing bits.
                 image_message["channels"][0]["data"] = image
                 image_message["channels"][0]["compression"] = "lz4"
@@ -137,7 +136,8 @@ class ZmqStream:
 
             for ii in trange(number_of_frames):
                 image = bitshuffle.compress_lz4(frame_array[ii]).tobytes()
-                image_message = self.image_message
+                # Deepcopy image message template
+                image_message = deepcopy(self.image_message)
                 # Fill in missing bits.
                 image_message["channels"][0]["data"] = image
                 image_message["channels"][0]["compression"] = "bslz4"
@@ -168,22 +168,23 @@ class ZmqStream:
         None
         """
         if raster_frames:
-            logging.info(f"raster frames")
             try:
+                logging.info(f"frame_id: {self.frame_id}")
                 image = compressed_image_list[self.frame_id]
                 image["series_number"] = self.sequence_id
                 self.socket.send(cbor2.dumps(image))
 
                 self.frame_id += 1
-                logging.info(f"frame_id: {self.frame_id}")
 
             except IndexError:
-                # Restart the frame_id
+                logging.info(f"Restarting frame_id")
                 self.frame_id = 0
-                logging.info(f"restarting frame_id")
+                image = compressed_image_list[self.frame_id]
+                image["series_number"] = self.sequence_id
+                self.socket.send(cbor2.dumps(image))
+                # Restart the frame_id
 
         else:
-            logging.info("nooooot raster frames")
             t = time.time()
             for image in tqdm(compressed_image_list):
                 time.sleep(self.delay_between_frames)
