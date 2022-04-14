@@ -99,9 +99,7 @@ with socket.connect(endpoint):
                 )
                 count += 1
 
-            # Print only multiples of 10
-            if not count % 10:
-                logging.info(f"Successfully processed {count} frames")
+            logging.info(f"Successfully processed {count} frames")
 
         elif loaded_message["type"] == "start" or "end":
             logging.info(loaded_message)
