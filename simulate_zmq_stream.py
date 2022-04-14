@@ -1,5 +1,6 @@
 import logging
 import time
+from copy import deepcopy
 
 import bitshuffle
 import cbor2
@@ -9,7 +10,6 @@ import lz4.frame
 import numpy as np
 import zmq
 from tqdm import tqdm, trange
-from copy import deepcopy
 
 from parse_master_file import Parse
 
@@ -29,7 +29,7 @@ class ZmqStream:
         hdf5_file_path: str,
         compression: str = "bslz4",
         delay_between_frames: float = 0.1,
-        raster_frames: bool = True
+        raster_frames: bool = True,
     ) -> None:
         """
         Parameters
@@ -151,8 +151,9 @@ class ZmqStream:
 
         return frame_list
 
-    def stream_frames(self, compressed_image_list: list[dict],
-                      raster_frames=True) -> None:
+    def stream_frames(
+        self, compressed_image_list: list[dict], raster_frames=True
+    ) -> None:
         """Send images through a ZeroMQ stream
 
         Parameters
@@ -177,7 +178,7 @@ class ZmqStream:
                 self.frame_id += 1
 
             except IndexError:
-                logging.info(f"Restarting frame_id")
+                logging.info("Restarting frame_id")
                 self.frame_id = 0
                 image = compressed_image_list[self.frame_id]
                 image["series_number"] = self.sequence_id
