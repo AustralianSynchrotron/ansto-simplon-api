@@ -170,20 +170,21 @@ class ZmqStream:
         """
         if raster_frames:
             try:
-                logging.info(f"frame_id: {self.frame_id}")
                 image = compressed_image_list[self.frame_id]
+                logging.info(f"frame_id: {self.frame_id}")
                 image["series_number"] = self.sequence_id
                 self.socket.send(cbor2.dumps(image))
 
                 self.frame_id += 1
 
             except IndexError:
-                logging.info("Restarting frame_id")
                 self.frame_id = 0
                 image = compressed_image_list[self.frame_id]
+                logging.info(f"frame_id: {self.frame_id}")
                 image["series_number"] = self.sequence_id
                 self.socket.send(cbor2.dumps(image))
-                # Restart the frame_id
+
+                self.frame_id += 1
 
         else:
             t = time.time()
