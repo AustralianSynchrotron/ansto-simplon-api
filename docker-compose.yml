@@ -4,6 +4,8 @@ services:
   mxsimplonapi:
     build: .
     container_name: mxsimplonapi
+    environment:
+      HDF5_MASTER_FILE: /share_data/4Mrasterdata/01x10/testraster01_0008_master.h5
     ports:
       - "8000:8000"
       - "5555:5555"

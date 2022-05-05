@@ -1,6 +1,6 @@
 FROM python:3.9
 
-ENV HDF5_MASTER_FILE=/share_data/4Mrasterdata/mx-sim-plon-api-data/ANSTOtest_303_master.h5
+ENV HDF5_MASTER_FILE=/share_data/4Mrasterdata/01x10/testraster01_0008_master.h5
 ENV POETRY_VERSION=1.1.13
 
 # Install OS packages
