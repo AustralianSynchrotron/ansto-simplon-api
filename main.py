@@ -1,4 +1,5 @@
-import glob
+# import glob
+import os
 
 from fastapi import FastAPI
 
@@ -6,7 +7,7 @@ from simulate_zmq_stream import ZmqStream
 
 app = FastAPI()
 
-HDF5_MASTER_FILE = glob.glob("*_master.h5")[0]
+HDF5_MASTER_FILE = os.environ["HDF5_MASTER_FILE"]
 stream = ZmqStream("tcp://*:5555", HDF5_MASTER_FILE, compression="lz4")
 
 

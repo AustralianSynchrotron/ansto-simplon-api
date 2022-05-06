@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mxsimplonapi:
+    build: .
+    container_name: mxsimplonapi
+    environment:
+      HDF5_MASTER_FILE: /share_data/4Mrasterdata/01x10/testraster01_0008_master.h5
+    ports:
+      - "8000:8000"
+      - "5555:5555"
+    volumes:
+      - simplon_share_data:/share_data
+
+volumes:
+  simplon_share_data:
+    driver: local
+    driver_opts:
+      type: cifs
+      device: //10.244.101.66/smd-share
+      o: username=guest,password=guest,vers=2.0,uid=1000,gid=1000
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.57.0/24
