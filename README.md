@@ -6,7 +6,7 @@
 
 1) If required, edit the "docker-compose.yml" file and modify the "HDF5_MASTER_FILE" environment variable to point to another HDF5 file hosted on the MX SMB share.
 
-2) Run docker compose to build the image and start the service.  
+2) Run docker compose to build the image and start the service.
 
 ```text
 docker-compose up
