@@ -32,7 +32,7 @@ steps:
       tags:
         - main
         - latest
-        - ${DRONE_TAG}-${DRONE_BUILD_NUMBER}
+        - ${DRONE_COMMIT}
       mtu: 1480
       build_args:
         - BUILD_GIT_BRANCH=${DRONE_COMMIT_BRANCH}
