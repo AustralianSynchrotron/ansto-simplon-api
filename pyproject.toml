@@ -7,18 +7,18 @@ authors = ["Francisco Hernandez Vivanco <hernandf@ansto.gov.au>",
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fastapi = "^0.70.1"
+fastapi = "0.70.1"
 numpy = "1.22.0"
-pyzmq = "^22.3.0"
-h5py = "^3.6.0"
-hdf5plugin = "^3.2.0"
-uvicorn = "^0.16.0"
-lz4 = "^4.0.0"
-tqdm = "^4.63.0"
-cbor2 = "^5.4.2"
-Cython = "^0.29.28"
-bitshuffle = {git = "https://github.com/kiyo-masui/bitshuffle.git", rev = "0.4.1"}
-requests = "^2.27.1"
+pyzmq = "22.3.0"
+h5py = "3.6.0"
+hdf5plugin = "3.2.0"
+uvicorn = "0.16.0"
+lz4 = "4.0.0"
+tqdm = "4.63.0"
+cbor2 = "5.4.2"
+Cython = "0.29.28"
+bitshuffle = {git = "https://github.com/kiyo-masui/bitshuffle.git", rev = "0.4.2"}
+requests = "2.27.1"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.17.0"
