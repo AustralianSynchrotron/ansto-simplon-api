@@ -174,6 +174,7 @@ class ZmqStream:
         -------
         None
         """
+        logging.info("Sending frames")
         if raster_frames:
             try:
                 image = compressed_image_list[self.frame_id]
@@ -201,8 +202,8 @@ class ZmqStream:
                 image["series_number"] = self.sequence_id
                 self.socket.send(cbor2.dumps(image))
 
-                frame_rate = len(compressed_image_list) / (time.time() - t)
-                logging.info(f"Frame rate: {frame_rate} frames / s")
+            frame_rate = len(compressed_image_list) / (time.time() - t)
+            logging.info(f"Frame rate: {frame_rate} frames / s")
 
     def stream_start_message(self) -> None:
         """
