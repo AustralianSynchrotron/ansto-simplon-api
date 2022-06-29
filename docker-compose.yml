@@ -5,7 +5,11 @@ services:
     build: .
     container_name: mxsimplonapi
     environment:
+      ZMQ_ADDRESS: tcp://*:5555
       HDF5_MASTER_FILE: /share_data/4Mrasterdata/01x10/testraster01_0008_master.h5
+      DELAY_BETWEEN_FRAMES: 0.1 # seconds
+      COMPRESSION_TYPE: lz4 # allowed options are: lz4 or bslz4
+      RASTER_FRAMES: True # can be True or False
     ports:
       - "8000:8000"
       - "5555:5555"
