@@ -57,6 +57,12 @@ class ZmqStream:
         self.delay_between_frames = delay_between_frames
         self.raster_frames = raster_frames
 
+        logging.info(f"ZMQ Address: {self.address}")
+        logging.info(f"Hdf5 file path: {self.hdf5_file_path}")
+        logging.info(f"Compression type: {self.compression}")
+        logging.info(f"Delay between frames (s): {self.delay_between_frames}")
+        logging.info(f"raster_frames: {self.raster_frames}")
+
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUSH)
         self.socket.bind(self.address)
