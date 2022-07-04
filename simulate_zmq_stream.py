@@ -9,7 +9,7 @@ import hdf5plugin  # noqa
 import lz4.frame
 import numpy as np
 import zmq
-from tqdm import tqdm, trange
+from tqdm import trange
 
 from parse_master_file import Parse
 
@@ -30,6 +30,8 @@ class ZmqStream:
         compression: str = "bslz4",
         delay_between_frames: float = 0.1,
         raster_frames: bool = True,
+        number_of_data_files: int = 1,
+        number_of_frames_per_trigger: int = 200,
     ) -> None:
         """
         Parameters
@@ -42,9 +44,13 @@ class ZmqStream:
             Compression type. Accepted compression types are lz4 and bslz4.
             Default value is bslz4
         delay_between_frames : float, optional
-            Time delay between images sent via the ZeroMQ stream
+            Time delay between images sent via the ZeroMQ stream [seconds]
         raster_frames : bool, optional
             If true, the sim-plon-api only sends one frame per trigger
+        number_of_data_files : int, optional
+            Number of data files loaded in memory
+        number_of_frames_per_trigger : int, optional
+            Number of frames per trigger
 
         Returns
         -------
@@ -56,12 +62,18 @@ class ZmqStream:
         self.compression = compression
         self.delay_between_frames = delay_between_frames
         self.raster_frames = raster_frames
+        self.number_of_data_files = number_of_data_files
+        self.number_of_frames_per_trigger = number_of_frames_per_trigger
 
         logging.info(f"ZMQ Address: {self.address}")
         logging.info(f"Hdf5 file path: {self.hdf5_file_path}")
         logging.info(f"Compression type: {self.compression}")
         logging.info(f"Delay between frames (s): {self.delay_between_frames}")
-        logging.info(f"raster_frames: {self.raster_frames}")
+        logging.info(f"Raster frames: {self.raster_frames}")
+        logging.info(f"Number of data files: {self.number_of_data_files}")
+        logging.info(
+            f"Number of frames per trigger: {self.number_of_frames_per_trigger}"
+        )
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUSH)
@@ -104,9 +116,14 @@ class ZmqStream:
         """
 
         hdf5_file = h5py.File(hdf5_file_path)
-        key = list(hdf5_file["entry"]["data"].keys())[0]
+        keys = list(hdf5_file["entry"]["data"].keys())
 
-        frame_array = np.array(hdf5_file["entry"]["data"][key])
+        frame_list = []
+        for i in range(self.number_of_data_files):
+            frame_list.append(np.array(hdf5_file["entry"]["data"][keys[i]]))
+
+        frame_array = np.array(frame_list)
+        del frame_list
 
         # Would make more sense in the __init__ section
         # but then we'd need to read the file twice
@@ -115,42 +132,47 @@ class ZmqStream:
         ).header()
 
         # Delete the hdf5_file, we got what we needed
+        hdf5_file.close()
         del hdf5_file
 
-        number_of_frames = frame_array.shape[0]
-        array_shape = frame_array[0].shape
+        number_of_frames_per_data_file = frame_array.shape[1]
+        array_shape = frame_array[0][0].shape
         dtype = frame_array.dtype
 
         frame_list = []
         if compression == "lz4":
             logging.info(f"Compression type: {self.compression}. Compressing data...")
 
-            for ii in trange(number_of_frames):
-                image = lz4.frame.compress(frame_array[ii])
-                # Deepcopy image message template
-                image_message = deepcopy(self.image_message)
-                # Fill in missing bits.
-                image_message["channels"][0]["data"] = image
-                image_message["channels"][0]["compression"] = "lz4"
-                image_message["channels"][0]["data_type"] = str(dtype)
-                image_message["channels"][0]["array_shape"] = array_shape
+            for jj in range(self.number_of_data_files):
+                logging.info(f"Loading data file {jj}:")
+                for ii in trange(number_of_frames_per_data_file):
+                    image = lz4.frame.compress(frame_array[jj][ii])
+                    # Deepcopy image message template
+                    image_message = deepcopy(self.image_message)
+                    # Fill in missing bits.
+                    image_message["channels"][0]["data"] = image
+                    image_message["channels"][0]["compression"] = "lz4"
+                    image_message["channels"][0]["data_type"] = str(dtype)
+                    image_message["channels"][0]["array_shape"] = array_shape
 
-                frame_list.append(image_message)
+                    frame_list.append(image_message)
 
         elif compression == "bslz4":
             logging.info(f"Compression type: {self.compression}. Compressing data...")
 
-            for ii in trange(number_of_frames):
-                image = bitshuffle.compress_lz4(frame_array[ii]).tobytes()
-                # Deepcopy image message template
-                image_message = deepcopy(self.image_message)
-                # Fill in missing bits.
-                image_message["channels"][0]["data"] = image
-                image_message["channels"][0]["compression"] = "bslz4"
-                image_message["channels"][0]["data_type"] = str(dtype)
-                image_message["channels"][0]["array_shape"] = array_shape
+            for jj in range(self.number_of_data_files):
+                logging.info(f"Loading data file {jj}:")
+                for ii in trange(number_of_frames_per_data_file):
+                    image = bitshuffle.compress_lz4(frame_array[jj][ii]).tobytes()
+                    # Deepcopy image message template
+                    image_message = deepcopy(self.image_message)
+                    # Fill in missing bits.
+                    image_message["channels"][0]["data"] = image
+                    image_message["channels"][0]["compression"] = "bslz4"
+                    image_message["channels"][0]["data_type"] = str(dtype)
+                    image_message["channels"][0]["array_shape"] = array_shape
 
-                frame_list.append(image_message)
+                    frame_list.append(image_message)
 
         else:
             raise Exception("The allowed compression types are lz4 and bslz4")
@@ -195,14 +217,26 @@ class ZmqStream:
 
         else:
             t = time.time()
-            for image in tqdm(compressed_image_list):
+            for _ in trange(self.number_of_frames_per_trigger):
                 time.sleep(self.delay_between_frames)
+                try:
+                    # Add series number
+                    compressed_image_list[self.frame_id][
+                        "series_number"
+                    ] = self.sequence_id
+                    self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
+                    self.frame_id += 1
 
-                # Add series number
-                image["series_number"] = self.sequence_id
-                self.socket.send(cbor2.dumps(image))
+                except IndexError:
+                    self.frame_id = 0
+                    compressed_image_list[self.frame_id][
+                        "series_number"
+                    ] = self.sequence_id
+                    self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
 
-            frame_rate = len(compressed_image_list) / (time.time() - t)
+                    self.frame_id += 1
+
+            frame_rate = self.number_of_frames_per_trigger / (time.time() - t)
             logging.info(f"Frame rate: {frame_rate} frames / s")
 
     def stream_start_message(self) -> None:
