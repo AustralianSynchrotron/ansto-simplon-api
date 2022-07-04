@@ -6,10 +6,12 @@ services:
     container_name: mxsimplonapi
     environment:
       ZMQ_ADDRESS: tcp://*:5555
-      HDF5_MASTER_FILE: /share_data/4Mrasterdata/01x10/testraster01_0008_master.h5
-      DELAY_BETWEEN_FRAMES: 0.1 # seconds
-      COMPRESSION_TYPE: lz4 # allowed options are: lz4 or bslz4
-      RASTER_FRAMES: True # can be True or False
+      HDF5_MASTER_FILE: /share_data/datasets_full/17831a/0019/testcrystal_0019_master.h5
+      DELAY_BETWEEN_FRAMES: 0.001 # seconds
+      COMPRESSION_TYPE: bslz4 # allowed options are: lz4 or bslz4
+      NUMBER_OF_DATA_FILES: 2 # 2 seems to be the maximum number of files we can load into memory (16M data)
+      NUMBER_OF_FRAMES_PER_TRIGGER: 400 # A number multiple of 200
+      RASTER_FRAMES: "False" # can be True or False
     ports:
       - "8000:8000"
       - "5555:5555"

@@ -12,7 +12,11 @@ ZMQ_ADDRESS = os.environ.get("ZMQ_ADDRESS", "tcp://*:5555")
 HDF5_MASTER_FILE = os.environ["HDF5_MASTER_FILE"]
 DELAY_BETWEEN_FRAMES = float(os.environ.get("DELAY_BETWEEN_FRAMES", "0.1"))
 COMPRESSION_TYPE = os.environ.get("COMPRESSION_TYPE", "lz4")
-RASTER_FRAMES = bool(strtobool(os.environ.get("RASTER_FRAMES", "True")))
+RASTER_FRAMES = bool(strtobool(os.environ.get("RASTER_FRAMES", "False")))
+NUMBER_OF_DATA_FILES = int(os.environ.get("NUMBER_OF_DATA_FILES", "2"))
+NUMBER_OF_FRAMES_PER_TRIGGER = int(
+    os.environ.get("NUMBER_OF_FRAMES_PER_TRIGGER", "400")
+)
 
 stream = ZmqStream(
     address=ZMQ_ADDRESS,
@@ -20,6 +24,8 @@ stream = ZmqStream(
     compression=COMPRESSION_TYPE,
     delay_between_frames=DELAY_BETWEEN_FRAMES,
     raster_frames=RASTER_FRAMES,
+    number_of_data_files=NUMBER_OF_DATA_FILES,
+    number_of_frames_per_trigger=NUMBER_OF_FRAMES_PER_TRIGGER,
 )
 
 
