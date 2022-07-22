@@ -4,7 +4,13 @@
 
 ### Docker Compose
 
-1) If required, edit the "docker-compose.yml" file and modify the "HDF5_MASTER_FILE" environment variable to point to another HDF5 file hosted on the MX SMB share.
+1) If required, edit the "docker-compose.yml" file and modify the "HDF5_MASTER_FILE" environment variable to point to another HDF5 file hosted on the MX SMB share. Additional options can be also be configured:
+
+      * DELAY_BETWEEN_FRAMES (in seconds)
+      * COMPRESSION_TYPE: Allowed options are: lz4, bslz4, or no_compression
+      * NUMBER_OF_DATA_FILES: 2 # 2 seems to be the maximum number of files we can load into memory (16M data)
+      * NUMBER_OF_FRAMES_PER_TRIGGER
+      * RASTER_FRAMES: If true, only one frame is sent per trigger, and the NUMBER_OF_DATA_FILES and NUMBER_OF_FRAMES_PER_TRIGGER are ignored
 
 2) Run docker compose to build the image and start the service.
 
