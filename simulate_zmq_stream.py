@@ -13,7 +13,11 @@ from tqdm import trange
 
 from parse_master_file import Parse
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+    datefmt="%d-%m-%Y %H:%M:%S",
+)
 
 
 class ZmqStream:
@@ -105,8 +109,8 @@ class ZmqStream:
 
         Raises
         ------
-        Exception
-            If the compression algorithm is not bslz4 or lz4
+        NotImplementedError
+            If the compression algorithm is not bslz4, lz4, or no_compression
 
         Returns
         -------
@@ -140,42 +144,33 @@ class ZmqStream:
         dtype = frame_array.dtype
 
         frame_list = []
-        if compression == "lz4":
-            logging.info(f"Compression type: {self.compression}. Compressing data...")
 
-            for jj in range(self.number_of_data_files):
-                logging.info(f"Loading data file {jj}:")
-                for ii in trange(number_of_frames_per_data_file):
+        for jj in range(self.number_of_data_files):
+            logging.info(f"Loading data file {jj}:")
+            logging.info(f"Compression type: {self.compression}. Compressing data...")
+            for ii in trange(number_of_frames_per_data_file):
+                image_message = deepcopy(self.image_message)
+                if compression == "lz4":
                     image = lz4.frame.compress(frame_array[jj][ii])
-                    # Deepcopy image message template
-                    image_message = deepcopy(self.image_message)
-                    # Fill in missing bits.
-                    image_message["channels"][0]["data"] = image
                     image_message["channels"][0]["compression"] = "lz4"
-                    image_message["channels"][0]["data_type"] = str(dtype)
-                    image_message["channels"][0]["array_shape"] = array_shape
-
-                    frame_list.append(image_message)
-
-        elif compression == "bslz4":
-            logging.info(f"Compression type: {self.compression}. Compressing data...")
-
-            for jj in range(self.number_of_data_files):
-                logging.info(f"Loading data file {jj}:")
-                for ii in trange(number_of_frames_per_data_file):
+                elif compression == "bslz4":
                     image = bitshuffle.compress_lz4(frame_array[jj][ii]).tobytes()
-                    # Deepcopy image message template
-                    image_message = deepcopy(self.image_message)
-                    # Fill in missing bits.
-                    image_message["channels"][0]["data"] = image
                     image_message["channels"][0]["compression"] = "bslz4"
-                    image_message["channels"][0]["data_type"] = str(dtype)
-                    image_message["channels"][0]["array_shape"] = array_shape
+                elif compression == "no_compression":
+                    image = frame_array[jj][ii].tobytes()
+                    image_message["channels"][0]["compression"] = "no_compression"
+                else:
+                    raise NotImplementedError(
+                        "The allowed compression types are lz4, bslz4 and "
+                        "no_compression"
+                    )
 
-                    frame_list.append(image_message)
+                # Fill in missing bits.
+                image_message["channels"][0]["data"] = image
+                image_message["channels"][0]["data_type"] = str(dtype)
+                image_message["channels"][0]["array_shape"] = array_shape
 
-        else:
-            raise Exception("The allowed compression types are lz4 and bslz4")
+                frame_list.append(image_message)
 
         return frame_list
 
