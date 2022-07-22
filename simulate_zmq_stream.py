@@ -219,6 +219,11 @@ class ZmqStream:
                     compressed_image_list[self.frame_id][
                         "series_number"
                     ] = self.sequence_id
+
+                    # FIXME: We're assuming the image number increases sequentially
+                    # for every trigger. This will have to be confirmed with Dectris
+                    compressed_image_list[self.frame_id]["image_number"] = self.frame_id
+
                     self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
                     self.frame_id += 1
 
