@@ -8,7 +8,7 @@ services:
       ZMQ_ADDRESS: tcp://*:5555
       HDF5_MASTER_FILE: /share_data/datasets_full/17831a/0019/testcrystal_0019_master.h5
       DELAY_BETWEEN_FRAMES: 0.001 # seconds
-      COMPRESSION_TYPE: bslz4 # allowed options are: lz4 or bslz4
+      COMPRESSION_TYPE: bslz4 # allowed options are: lz4, bslz4, or no_compression
       NUMBER_OF_DATA_FILES: 2 # 2 seems to be the maximum number of files we can load into memory (16M data)
       NUMBER_OF_FRAMES_PER_TRIGGER: 400 # A number multiple of 200
       RASTER_FRAMES: "False" # can be True or False
