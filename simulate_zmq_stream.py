@@ -13,7 +13,11 @@ from tqdm import trange
 
 from parse_master_file import Parse
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+    datefmt="%d-%m-%Y %H:%M:%S",
+)
 
 
 class ZmqStream:
@@ -143,8 +147,7 @@ class ZmqStream:
 
         for jj in range(self.number_of_data_files):
             logging.info(f"Loading data file {jj}:")
-            logging.info(
-                f"Compression type: {self.compression}. Compressing data...")
+            logging.info(f"Compression type: {self.compression}. Compressing data...")
             for ii in trange(number_of_frames_per_data_file):
                 image_message = deepcopy(self.image_message)
                 if compression == "lz4":
@@ -159,7 +162,8 @@ class ZmqStream:
                 else:
                     raise NotImplementedError(
                         "The allowed compression types are lz4, bslz4 and "
-                        "no_compression")
+                        "no_compression"
+                    )
 
                 # Fill in missing bits.
                 image_message["channels"][0]["data"] = image
