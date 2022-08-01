@@ -87,6 +87,8 @@ class ZmqStream:
 
         self.frame_id = 0
 
+        self.image_number = 0  # used to mimic the dectris image number
+
         logging.info("Loading dataset...")
         self.frames = self.create_list_of_compressed_frames(
             self.hdf5_file_path, self.compression
@@ -222,22 +224,35 @@ class ZmqStream:
 
                     # FIXME: We're assuming the image number increases sequentially
                     # for every trigger. This will have to be confirmed with Dectris
-                    compressed_image_list[self.frame_id]["image_number"] = self.frame_id
+                    compressed_image_list[self.frame_id][
+                        "image_number"
+                    ] = self.image_number
+                    # logging.info(f"not exception: {self.image_number}")
 
                     self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
                     self.frame_id += 1
-
+                    self.image_number += 1
                 except IndexError:
                     self.frame_id = 0
                     compressed_image_list[self.frame_id][
                         "series_number"
                     ] = self.sequence_id
+
+                    compressed_image_list[self.frame_id][
+                        "image_number"
+                    ] = self.image_number
+                    # logging.info(f"exception: {self.image_number}")
+
                     self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
 
                     self.frame_id += 1
+                    self.image_number += 1
 
             frame_rate = self.number_of_frames_per_trigger / (time.time() - t)
             logging.info(f"Frame rate: {frame_rate} frames / s")
+            # FIXME: We assume that the image numeber resets to zero after each trigger
+            # We have to check if this is the correct behaviuor
+            self.image_number = 0
 
     def stream_start_message(self) -> None:
         """
