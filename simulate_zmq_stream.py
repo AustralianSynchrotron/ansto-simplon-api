@@ -87,6 +87,8 @@ class ZmqStream:
 
         self.frame_id = 0
 
+        self.image_number = 0  # used to mimic the dectris image number
+
         logging.info("Loading dataset...")
         self.frames = self.create_list_of_compressed_frames(
             self.hdf5_file_path, self.compression
@@ -172,6 +174,8 @@ class ZmqStream:
 
                 frame_list.append(image_message)
 
+                del image_message
+
         return frame_list
 
     def stream_frames(
@@ -219,20 +223,35 @@ class ZmqStream:
                     compressed_image_list[self.frame_id][
                         "series_number"
                     ] = self.sequence_id
+
+                    compressed_image_list[self.frame_id][
+                        "image_number"
+                    ] = self.image_number
+
                     self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
                     self.frame_id += 1
-
+                    self.image_number += 1
                 except IndexError:
                     self.frame_id = 0
                     compressed_image_list[self.frame_id][
                         "series_number"
                     ] = self.sequence_id
+
+                    compressed_image_list[self.frame_id][
+                        "image_number"
+                    ] = self.image_number
+
                     self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
 
                     self.frame_id += 1
+                    self.image_number += 1
 
             frame_rate = self.number_of_frames_per_trigger / (time.time() - t)
             logging.info(f"Frame rate: {frame_rate} frames / s")
+
+            # FIXME: We assume that the image number resets to zero after each trigger.
+            # We have to check if this is the correct behaviour
+            self.image_number = 0
 
     def stream_start_message(self) -> None:
         """
@@ -245,6 +264,7 @@ class ZmqStream:
 
         logging.info("Sending start message")
         self.start_message["series_number"] = self.sequence_id
+        self.start_message["number_of_images"] = self.number_of_frames_per_trigger
         message = cbor2.dumps(self.start_message)
         self.socket.send(message)
 
