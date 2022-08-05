@@ -188,7 +188,7 @@ kind: secret
 name: rocketCIChannel
 get:
   path: asci-cicd-prod
-  name: rocketCIChannel
+  name: mxCIChannel
 ---
 kind: secret
 name: dockerServer
