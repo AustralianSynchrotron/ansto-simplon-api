@@ -49,7 +49,7 @@ steps:
       status: [success, failure]
     environment:
       ROCKET_CI_CHANNEL:
-        from_secret: rocketCIChannel
+        from_secret: mxCIChannel
       DOCKER_SERVER:
         from_secret: dockerServer
     commands:
@@ -137,7 +137,7 @@ steps:
       status: [success, failure]
     environment:
       ROCKET_CI_CHANNEL:
-        from_secret: rocketCIChannel
+        from_secret: mxCIChannel
       DOCKER_SERVER:
         from_secret: dockerServer
     commands:
@@ -185,7 +185,7 @@ get:
   name: rocketCIWebhook
 ---
 kind: secret
-name: rocketCIChannel
+name: mxCIChannel
 get:
   path: asci-cicd-prod
   name: mxCIChannel
