@@ -14,6 +14,7 @@ RUN useradd -ms /bin/bash asuser
 WORKDIR /home/asuser/
 COPY pyproject.toml poetry.lock simulate_zmq_stream.py \
     parse_master_file.py main.py /home/asuser/
+COPY schemas/ /home/asuser/schemas
 
 # Setup Poetry environment
 RUN pip install "poetry==$POETRY_VERSION"
