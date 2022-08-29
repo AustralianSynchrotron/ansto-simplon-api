@@ -4,6 +4,7 @@ from distutils.util import strtobool
 
 from fastapi import FastAPI
 
+from schemas.configuration import FrameTime, NumberOfImages
 from simulate_zmq_stream import ZmqStream
 
 app = FastAPI()
@@ -42,6 +43,8 @@ def trigger():
 @app.put("/detector/api/1.8.0/command/arm")
 def arm():
     stream.sequence_id += 1
+    # Reset the image number every time we arm the detector
+    stream.image_number = 0
     return {"sequence id": stream.sequence_id}
 
 
@@ -50,11 +53,12 @@ def disarm():
     print("Disarm detector")
 
 
-@app.put("/detector/api/1.8.0/config/{frame_time}")
-def set_frame_time(frame_time):
-    return {"value": frame_time}
+@app.put("/detector/api/1.8.0/config/frame_time")
+async def set_frame_time(frame_time: FrameTime):
+    return {"value": frame_time.value}
 
 
-@app.put("/detector/api/1.8.0/config/{nimages}")
-def set_nimages(nimages):
-    return {"value": nimages}
+@app.put("/detector/api/1.8.0/config/nimages")
+async def set_nimages(number_of_images: NumberOfImages):
+    stream.number_of_frames_per_trigger = number_of_images.value
+    return {"value": stream.number_of_frames_per_trigger}
