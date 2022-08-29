@@ -62,3 +62,53 @@ async def set_frame_time(frame_time: FrameTime):
 async def set_nimages(number_of_images: NumberOfImages):
     stream.number_of_frames_per_trigger = number_of_images.value
     return {"value": stream.number_of_frames_per_trigger}
+
+
+@app.get("/detector/api/1.8.0/config/sensor_thickness")
+async def get_sensor_thickness():
+    return {"value": 0.000450}
+
+
+@app.get("/detector/api/1.8.0/config/sensor_material")
+async def get_sensor_material():
+    return {"value": "Si"}
+
+
+@app.get("/detector/api/1.8.0/config/x_pixel_size")
+async def get_x_pixel_size():
+    return {"value": 0.000075000000000}
+
+
+@app.get("/detector/api/1.8.0/config/y_pixel_size")
+async def get_y_pixel_size():
+    return {"value": 0.000075000000000}
+
+
+@app.get("/detector/api/1.8.0/config/auto_summation")
+async def get_auto_summation():
+    return {"value": True}
+
+
+@app.get("/detector/api/1.8.0/config/eiger_fw_version")
+async def get_eiger_fw_version():
+    return {"value": "release-2020.2.5"}
+
+
+@app.get("/detector/api/1.8.0/config/software_version")
+async def get_software_version():
+    return {"value": "1.8.0"}
+
+
+@app.get("/detector/api/1.8.0/config/description")
+async def get_description():
+    return {"value": "Dectris EIGER2 Si 9M"}
+
+
+@app.get("/detector/api/1.8.0/config/detector_number")
+async def get_detector_number():
+    return {"value": "E-18-0108"}
+
+
+@app.get("/detector/api/1.8.0/config/detector_type")
+async def get_detector_type():
+    return {"value": "HPC"}
