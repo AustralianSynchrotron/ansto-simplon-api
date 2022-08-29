@@ -201,18 +201,22 @@ class ZmqStream:
                 image = compressed_image_list[self.frame_id]
                 logging.info(f"frame_id: {self.frame_id}")
                 image["series_number"] = self.sequence_id
+                image["image_number"] = self.image_number
                 self.socket.send(cbor2.dumps(image))
 
                 self.frame_id += 1
+                self.image_number += 1
 
             except IndexError:
                 self.frame_id = 0
                 image = compressed_image_list[self.frame_id]
                 logging.info(f"frame_id: {self.frame_id}")
                 image["series_number"] = self.sequence_id
+                image["image_number"] = self.image_number
                 self.socket.send(cbor2.dumps(image))
 
                 self.frame_id += 1
+                self.image_number += 1
 
         else:
             t = time.time()
@@ -317,3 +321,54 @@ class ZmqStream:
         None
         """
         self._sequence_id = value
+
+    @property
+    def image_number(self) -> int:
+        """
+        Gets the image_number
+
+        Returns
+        -------
+        self._image_number: int
+            The image_number
+        """
+        return self._image_number
+
+    @image_number.setter
+    def image_number(self, value: int) -> None:
+        """
+        Sets the image_number
+
+        Returns
+        -------
+        None
+        """
+        self._image_number = value
+
+    @property
+    def number_of_frames_per_trigger(self) -> None:
+        """
+        Sets the number of frames per trigger
+
+        Returns
+        -------
+        None
+        """
+        return self._number_of_frames_per_trigger
+
+    @number_of_frames_per_trigger.setter
+    def number_of_frames_per_trigger(self, value: int) -> None:
+        """
+        Sets the image_number
+
+        Parameters
+        ----------
+        value : int
+            The number of frames per trigger
+
+        Returns
+        -------
+        None
+        """
+        self._number_of_frames_per_trigger = value
+        logging.info(f"nimages set to: {value}")
