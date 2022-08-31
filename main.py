@@ -37,7 +37,7 @@ def home():
 
 @app.put("/detector/api/1.8.0/command/trigger")
 def trigger():
-    stream.start_stream()
+    stream.stream_frames(stream.frames, stream.raster_frames)
 
 
 @app.put("/detector/api/1.8.0/command/arm")
@@ -45,11 +45,13 @@ def arm():
     stream.sequence_id += 1
     # Reset the image number every time we arm the detector
     stream.image_number = 0
+    stream.stream_start_message()
     return {"sequence id": stream.sequence_id}
 
 
 @app.put("/detector/api/1.8.0/command/disarm")
 def disarm():
+    stream.stream_end_message()
     print("Disarm detector")
 
 
