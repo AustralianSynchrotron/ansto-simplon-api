@@ -6,7 +6,7 @@ authors = ["Francisco Hernandez Vivanco <hernandf@ansto.gov.au>",
            "Daniel Eriksson <daniele@ansto.gov.au>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 fastapi = "0.70.1"
 numpy = "1.22.0"
 pyzmq = "22.3.0"
