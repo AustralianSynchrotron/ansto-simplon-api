@@ -1,7 +1,7 @@
-FROM python:3.9
+FROM python:3.10
 
-ENV HDF5_MASTER_FILE=/share_data/4Mrasterdata/01x10/testraster01_0008_master.h5
-ENV POETRY_VERSION=1.1.13
+ENV HDF5_MASTER_FILE=/share_data/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5
+ENV POETRY_VERSION=1.1.12
 
 # Install OS packages
 USER root

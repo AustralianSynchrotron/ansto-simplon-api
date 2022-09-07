@@ -1,5 +1,3 @@
-from typing import Union
-
 import h5py
 import numpy as np
 
@@ -42,7 +40,7 @@ class Parse:
         hdf5_file.visit(entries.append)
         return entries
 
-    def parse(self, look_for: str) -> Union[str, int, float]:
+    def parse(self, look_for: str) -> str | int | float:
         """
         Looks up and returns entry from Master file. Treats the
         Master file like a key:value store with unique keys.
