@@ -115,18 +115,19 @@ class Parse:
             "goniometer": {
                 "omega": {
                     "increment": self.parse("omega_range_average"),
-                    "start": self.hf.get("/entry/sample/goniometer/omega")[0],
+                    # Needs to get the first item of a list, so can't use parse
+                    "start": float(self.hf.get("/entry/sample/goniometer/omega")[0]),
                 },
                 "otherAxis": {
-                    "increment": 1,
-                    "start": 0,
+                    "increment": 1.0,
+                    "start": 0.0,
                 },
             },
             "image_size_x": self.parse("x_pixels_in_detector"),
             "image_size_y": self.parse("y_pixels_in_detector"),
             "incident_energy": self.parse("photon_energy"),
             "incident_wavelength": self.parse("incident_wavelength"),
-            "number_of_images": self.parse("nimages"),
+            "number_of_images": None,  # self.parse("nimages"),
             "pixel_mask": None,
             "pixel_mask_enabled": bool(self.parse("pixel_mask_applied")),
             "pixel_size_x": self.parse("x_pixel_size"),
@@ -134,15 +135,13 @@ class Parse:
             "saturation_value": self.parse("saturation_value"),
             "sensor_material": self.parse("sensor_material"),
             "sensor_thickness": self.parse("sensor_thickness"),
-            "series_id": "FIX",
-            "series_unique_id": "FIX",
+            "series_id": None,  # int
+            "series_unique_id": None,  # str
             "threshold_energy": {
                 "1": self.parse("threshold_energy"),
                 "2": self.parse("threshold_energy") * 3,
             },
-            "user_data": [
-                {"pi": float(np.pi)},
-            ],
+            "user_data": {"pi": float(np.pi)},
             "virtual_pixel_correction_applied": bool(
                 self.parse("virtual_pixel_correction_applied")
             ),
@@ -179,7 +178,7 @@ class Parse:
 if __name__ == "__main__":
     import pprint
 
-    filepath = "/home/deriksson/samba_share/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5"
+    filepath = "/home/deriksson/samba_share/datasets_full/17831a/0019/testcrystal_0019_master.h5"
     p = Parse(h5py.File(filepath))
     start, _, _ = p.header()
     pprint.pprint(start)

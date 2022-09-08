@@ -267,7 +267,7 @@ class ZmqStream:
         """
 
         logging.info("Sending start message")
-        self.start_message["series_number"] = self.sequence_id
+        self.start_message["series_id"] = self.sequence_id
         self.start_message["number_of_images"] = self.number_of_frames_per_trigger
         message = cbor2.dumps(self.start_message)
         self.socket.send(message)
