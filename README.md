@@ -1,7 +1,7 @@
 # MX Sim-Plon API
 A simulated Dectris Simplon API. Aims to have the same RESTlike interface and produce a ZMQ stream of data from an input Hdf5 file.
 
-Currently generates a [Stream2 alpha] release compatible ZMQ stream. 
+Currently generates a [Stream2 alpha] release compatible ZMQ stream.
 
 ## Setup
 
