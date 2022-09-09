@@ -173,12 +173,3 @@ class Parse:
             "series_unique_id": "FIX",
         }
         return start_message, image_message, end_message
-
-
-if __name__ == "__main__":
-    import pprint
-
-    filepath = "/home/deriksson/samba_share/datasets_full/17831a/0019/testcrystal_0019_master.h5"
-    p = Parse(h5py.File(filepath))
-    start, _, _ = p.header()
-    pprint.pprint(start)
