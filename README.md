@@ -1,4 +1,7 @@
 # MX Sim-Plon API
+A simulated Dectris Simplon API. Aims to have the same RESTlike interface and produce a ZMQ stream of data from an input Hdf5 file.
+
+Currently generates a [Stream2 alpha] release compatible ZMQ stream. 
 
 ## Setup
 
@@ -51,3 +54,5 @@ docker run --rm -dt --name sim_plon_api \
 <!-- NOTE: If you need to use a different HDF5 file, copy the master hdf5 file and the data file to
 the `hdf5_data` folder to run this example, e.g. `testcrystal_0009_master.h5` and `testcrystal_0009_data_000001.h5`.
 At the moment only one master file can be in the `hdf5_data` folder -->
+
+[Stream2 alpha]: https://github.com/dectris/documentation/tree/473d768c3eddc1989da00c941081847955c94e96/stream_v2
