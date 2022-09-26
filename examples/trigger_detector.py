@@ -9,8 +9,8 @@ print(r.json())
 print("Configure...")
 dict_data = {"value": 8}
 data_json = json.dumps(dict_data)
-r = requests.put(f"{REST}/detector/api/1.8.0/config/frame_time", data=data_json)
-print(r.text)
+# r = requests.put(f"{REST}/detector/api/1.8.0/config/frame_time", data=data_json)
+# print(r.text)
 r = requests.put(f"{REST}/detector/api/1.8.0/config/nimages", data=data_json)
 print(r.text)
 
