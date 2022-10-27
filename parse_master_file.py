@@ -149,9 +149,9 @@ class Parse:
 
         image_message = {
             "type": "image",
-            "series_number": "FIX",
+            "series_id": "FIX",
             "series_unique_id": "FIX",
-            "image_number": "FIX",
+            "image_id": "FIX",
             "hardware_start_time": "FIX",
             "hardware_stop_time": "FIX",
             "hardware_exposure_time": "FIX",
@@ -169,7 +169,7 @@ class Parse:
 
         end_message = {
             "type": "end",
-            "series_number": "FIX",
+            "series_id": "FIX",
             "series_unique_id": "FIX",
         }
         return start_message, image_message, end_message

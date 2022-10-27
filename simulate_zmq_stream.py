@@ -200,8 +200,8 @@ class ZmqStream:
             try:
                 image = compressed_image_list[self.frame_id]
                 logging.info(f"frame_id: {self.frame_id}")
-                image["series_number"] = self.sequence_id
-                image["image_number"] = self.image_number
+                image["series_id"] = self.sequence_id
+                image["image_id"] = self.image_number
                 self.socket.send(cbor2.dumps(image))
 
                 self.frame_id += 1
@@ -211,8 +211,8 @@ class ZmqStream:
                 self.frame_id = 0
                 image = compressed_image_list[self.frame_id]
                 logging.info(f"frame_id: {self.frame_id}")
-                image["series_number"] = self.sequence_id
-                image["image_number"] = self.image_number
+                image["series_id"] = self.sequence_id
+                image["image_id"] = self.image_number
                 self.socket.send(cbor2.dumps(image))
 
                 self.frame_id += 1
@@ -224,26 +224,18 @@ class ZmqStream:
                 time.sleep(self.delay_between_frames)
                 try:
                     # Add series number
-                    compressed_image_list[self.frame_id][
-                        "series_number"
-                    ] = self.sequence_id
+                    compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
 
-                    compressed_image_list[self.frame_id][
-                        "image_number"
-                    ] = self.image_number
+                    compressed_image_list[self.frame_id]["image_id"] = self.image_number
 
                     self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
                     self.frame_id += 1
                     self.image_number += 1
                 except IndexError:
                     self.frame_id = 0
-                    compressed_image_list[self.frame_id][
-                        "series_number"
-                    ] = self.sequence_id
+                    compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
 
-                    compressed_image_list[self.frame_id][
-                        "image_number"
-                    ] = self.image_number
+                    compressed_image_list[self.frame_id]["image_id"] = self.image_number
 
                     self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
 
@@ -282,7 +274,7 @@ class ZmqStream:
         """
 
         logging.info("Sending end message")
-        self.end_message["series_number"] = self.sequence_id
+        self.end_message["series_id"] = self.sequence_id
         message = cbor2.dumps(self.end_message)
         self.socket.send(message)
 
