@@ -8,6 +8,7 @@ import h5py
 import hdf5plugin  # noqa
 import lz4.frame
 import numpy as np
+import numpy.typing as npt
 import zmq
 from tqdm import trange
 
@@ -124,12 +125,10 @@ class ZmqStream:
         hdf5_file = h5py.File(hdf5_file_path)
         keys = list(hdf5_file["entry"]["data"].keys())
 
-        frame_list = []
-        for i in range(self.number_of_data_files):
-            frame_list.append(np.array(hdf5_file["entry"]["data"][keys[i]]))
-
-        frame_array = np.array(frame_list)
-        del frame_list
+        datafile_list: list[npt.NDArray] = [
+            np.array(hdf5_file["entry"]["data"][keys[i]])
+            for i in range(self.number_of_data_files)
+        ]
 
         # Would make more sense in the __init__ section
         # but then we'd need to read the file twice
@@ -141,25 +140,27 @@ class ZmqStream:
         hdf5_file.close()
         del hdf5_file
 
-        number_of_frames_per_data_file = frame_array.shape[1]
-        array_shape = frame_array[0][0].shape
-        dtype = frame_array.dtype
+        number_of_frames_per_data_file = [
+            datafile.shape[0] for datafile in datafile_list
+        ]
+        array_shape = datafile_list[0].shape[1:]
+        dtype = datafile_list[0].dtype
 
         frame_list = []
 
         for jj in range(self.number_of_data_files):
             logging.info(f"Loading data file {jj}:")
             logging.info(f"Compression type: {self.compression}. Compressing data...")
-            for ii in trange(number_of_frames_per_data_file):
+            for ii in trange(number_of_frames_per_data_file[jj]):
                 image_message = deepcopy(self.image_message)
                 if compression == "lz4":
-                    image = lz4.frame.compress(frame_array[jj][ii])
+                    image = lz4.frame.compress(datafile_list[jj][ii])
                     image_message["channels"][0]["compression"] = "lz4"
                 elif compression == "bslz4":
-                    image = bitshuffle.compress_lz4(frame_array[jj][ii]).tobytes()
+                    image = bitshuffle.compress_lz4(datafile_list[jj][ii]).tobytes()
                     image_message["channels"][0]["compression"] = "bslz4"
                 elif compression == "no_compression":
-                    image = frame_array[jj][ii].tobytes()
+                    image = datafile_list[jj][ii].tobytes()
                     image_message["channels"][0]["compression"] = "no_compression"
                 else:
                     raise NotImplementedError(
@@ -176,6 +177,8 @@ class ZmqStream:
 
                 del image_message
 
+        logging.info(f"Number of unique frames: {len(frame_list)}")
+        del datafile_list
         return frame_list
 
     def stream_frames(
