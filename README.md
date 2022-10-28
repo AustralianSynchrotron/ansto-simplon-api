@@ -12,8 +12,7 @@ Currently generates a [Stream2 alpha] release compatible ZMQ stream.
       * DELAY_BETWEEN_FRAMES (in seconds)
       * COMPRESSION_TYPE: Allowed options are: lz4, bslz4, or no_compression
       * NUMBER_OF_DATA_FILES: 2 # 2 seems to be the maximum number of files we can load into memory (16M data)
-      * NUMBER_OF_FRAMES_PER_TRIGGER
-      * RASTER_FRAMES: If true, only one frame is sent per trigger, and the NUMBER_OF_DATA_FILES and NUMBER_OF_FRAMES_PER_TRIGGER are ignored
+      * NUMBER_OF_FRAMES_PER_TRIGGER: By default 30, but can be changed via the `/detector/api/1.8.0/config/nimages` endpoint
 
 2) Run docker compose to build the image and start the service.
 

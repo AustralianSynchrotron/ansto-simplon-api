@@ -1,6 +1,5 @@
 # import glob
 import os
-from distutils.util import strtobool
 
 from fastapi import FastAPI
 
@@ -13,7 +12,6 @@ ZMQ_ADDRESS = os.environ.get("ZMQ_ADDRESS", "tcp://*:5555")
 HDF5_MASTER_FILE = os.environ["HDF5_MASTER_FILE"]
 DELAY_BETWEEN_FRAMES = float(os.environ.get("DELAY_BETWEEN_FRAMES", "0.1"))
 COMPRESSION_TYPE = os.environ.get("COMPRESSION_TYPE", "lz4")
-RASTER_FRAMES = bool(strtobool(os.environ.get("RASTER_FRAMES", "False")))
 NUMBER_OF_DATA_FILES = int(os.environ.get("NUMBER_OF_DATA_FILES", "2"))
 NUMBER_OF_FRAMES_PER_TRIGGER = int(
     os.environ.get("NUMBER_OF_FRAMES_PER_TRIGGER", "400")
@@ -24,7 +22,6 @@ stream = ZmqStream(
     hdf5_file_path=HDF5_MASTER_FILE,
     compression=COMPRESSION_TYPE,
     delay_between_frames=DELAY_BETWEEN_FRAMES,
-    raster_frames=RASTER_FRAMES,
     number_of_data_files=NUMBER_OF_DATA_FILES,
     number_of_frames_per_trigger=NUMBER_OF_FRAMES_PER_TRIGGER,
 )
@@ -37,7 +34,7 @@ def home():
 
 @app.put("/detector/api/1.8.0/command/trigger")
 def trigger():
-    stream.stream_frames(stream.frames, stream.raster_frames)
+    stream.stream_frames(stream.frames)
 
 
 @app.put("/detector/api/1.8.0/command/arm")

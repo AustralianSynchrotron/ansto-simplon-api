@@ -1,6 +1,7 @@
 import logging
 import time
 from copy import deepcopy
+from os import environ
 
 import bitshuffle
 import cbor2
@@ -34,7 +35,6 @@ class ZmqStream:
         hdf5_file_path: str,
         compression: str = "bslz4",
         delay_between_frames: float = 0.1,
-        raster_frames: bool = True,
         number_of_data_files: int = 1,
         number_of_frames_per_trigger: int = 200,
     ) -> None:
@@ -50,8 +50,6 @@ class ZmqStream:
             Default value is bslz4
         delay_between_frames : float, optional
             Time delay between images sent via the ZeroMQ stream [seconds]
-        raster_frames : bool, optional
-            If true, the sim-plon-api only sends one frame per trigger
         number_of_data_files : int, optional
             Number of data files loaded in memory
         number_of_frames_per_trigger : int, optional
@@ -66,19 +64,16 @@ class ZmqStream:
         self.hdf5_file_path = hdf5_file_path
         self.compression = compression
         self.delay_between_frames = delay_between_frames
-        self.raster_frames = raster_frames
         self.number_of_data_files = number_of_data_files
-        self.number_of_frames_per_trigger = number_of_frames_per_trigger
+        self.number_of_frames_per_trigger = environ.get(
+            "NUMBER_OF_FRAMES_PER_TRIGGER", 30
+        )
 
         logging.info(f"ZMQ Address: {self.address}")
         logging.info(f"Hdf5 file path: {self.hdf5_file_path}")
         logging.info(f"Compression type: {self.compression}")
         logging.info(f"Delay between frames (s): {self.delay_between_frames}")
-        logging.info(f"Raster frames: {self.raster_frames}")
         logging.info(f"Number of data files: {self.number_of_data_files}")
-        logging.info(
-            f"Number of frames per trigger: {self.number_of_frames_per_trigger}"
-        )
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUSH)
@@ -181,9 +176,7 @@ class ZmqStream:
         del datafile_list
         return frame_list
 
-    def stream_frames(
-        self, compressed_image_list: list[dict], raster_frames=True
-    ) -> None:
+    def stream_frames(self, compressed_image_list: list[dict]) -> None:
         """Send images through a ZeroMQ stream
 
         Parameters
@@ -191,66 +184,36 @@ class ZmqStream:
         compressed_image_list : list[dict]
             A list of dictionaries containing compressed frames and metadata
 
-        raster_frames : bool
-            If true, the sim-plon-api only sends one frame per trigger
-
         Returns
         -------
         None
         """
         logging.info("Sending frames")
-        if raster_frames:
+        t = time.time()
+        for _ in trange(self.number_of_frames_per_trigger):
+            time.sleep(self.delay_between_frames)
             try:
-                image = compressed_image_list[self.frame_id]
-                logging.info(f"frame_id: {self.frame_id}")
-                image["series_id"] = self.sequence_id
-                image["image_id"] = self.image_number
-                self.socket.send(cbor2.dumps(image))
+                # Add series number
+                compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
 
+                compressed_image_list[self.frame_id]["image_id"] = self.image_number
+
+                self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
                 self.frame_id += 1
                 self.image_number += 1
-
             except IndexError:
                 self.frame_id = 0
-                image = compressed_image_list[self.frame_id]
-                logging.info(f"frame_id: {self.frame_id}")
-                image["series_id"] = self.sequence_id
-                image["image_id"] = self.image_number
-                self.socket.send(cbor2.dumps(image))
+                compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
+
+                compressed_image_list[self.frame_id]["image_id"] = self.image_number
+
+                self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
 
                 self.frame_id += 1
                 self.image_number += 1
 
-        else:
-            t = time.time()
-            for _ in trange(self.number_of_frames_per_trigger):
-                time.sleep(self.delay_between_frames)
-                try:
-                    # Add series number
-                    compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
-
-                    compressed_image_list[self.frame_id]["image_id"] = self.image_number
-
-                    self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
-                    self.frame_id += 1
-                    self.image_number += 1
-                except IndexError:
-                    self.frame_id = 0
-                    compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
-
-                    compressed_image_list[self.frame_id]["image_id"] = self.image_number
-
-                    self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
-
-                    self.frame_id += 1
-                    self.image_number += 1
-
-            frame_rate = self.number_of_frames_per_trigger / (time.time() - t)
-            logging.info(f"Frame rate: {frame_rate} frames / s")
-
-            # FIXME: We assume that the image number resets to zero after each trigger.
-            # We have to check if this is the correct behaviour
-            self.image_number = 0
+        frame_rate = self.number_of_frames_per_trigger / (time.time() - t)
+        logging.info(f"Frame rate: {frame_rate} frames / s")
 
     def stream_start_message(self) -> None:
         """
@@ -291,7 +254,7 @@ class ZmqStream:
         """
 
         self.stream_start_message()
-        self.stream_frames(self.frames, self.raster_frames)
+        self.stream_frames(self.frames)
         self.stream_end_message()
 
     @property
