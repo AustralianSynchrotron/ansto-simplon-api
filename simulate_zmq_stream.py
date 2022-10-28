@@ -1,7 +1,6 @@
 import logging
 import time
 from copy import deepcopy
-from os import environ
 
 import bitshuffle
 import cbor2
@@ -65,9 +64,7 @@ class ZmqStream:
         self.compression = compression
         self.delay_between_frames = delay_between_frames
         self.number_of_data_files = number_of_data_files
-        self.number_of_frames_per_trigger = environ.get(
-            "NUMBER_OF_FRAMES_PER_TRIGGER", 30
-        )
+        self.number_of_frames_per_trigger = number_of_data_files
 
         logging.info(f"ZMQ Address: {self.address}")
         logging.info(f"Hdf5 file path: {self.hdf5_file_path}")
