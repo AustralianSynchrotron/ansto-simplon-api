@@ -7,7 +7,11 @@ import lz4.frame
 import numpy as np
 import zmq
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+    datefmt="%d-%m-%Y %H:%M:%S",
+)
 
 
 def decompress_lz4_image(
@@ -83,6 +87,10 @@ with socket.connect(endpoint):
         loaded_message = cbor2.loads(message)
 
         if loaded_message["type"] == "image":
+            logging.info("-" * 80)
+            logging.info(f"series_id: {loaded_message['series_id']}")
+            logging.info(f"image_id: {loaded_message['image_id']}")
+
             if loaded_message["channels"][0]["compression"] == "lz4":
                 loaded_message["channels"][0]["data"] = decompress_lz4_image(
                     loaded_message["channels"][0]["data"],

@@ -11,7 +11,6 @@ services:
       COMPRESSION_TYPE: bslz4 # allowed options are: lz4, bslz4, or no_compression
       NUMBER_OF_DATA_FILES: 1 # 2 seems to be the maximum number of files we can load into memory (16M data)
       NUMBER_OF_FRAMES_PER_TRIGGER: 30 # A number multiple of 200
-      RASTER_FRAMES: "False" # can be True or False
     ports:
       - "8000:8000"
       - "5555:5555"
