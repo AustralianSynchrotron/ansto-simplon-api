@@ -1,6 +1,7 @@
 import logging
 import time
 from copy import deepcopy
+from typing import Any
 
 import bitshuffle
 import cbor2
@@ -13,7 +14,6 @@ import zmq
 from tqdm import trange
 
 from parse_master_file import Parse
-from typing import Any
 
 logging.basicConfig(
     level=logging.INFO,
@@ -339,7 +339,7 @@ class ZmqStream:
 
         Returns
         -------
-        self._image_number: Any
+        self._user_data : Any
             The user data
         """
         return self._user_data
