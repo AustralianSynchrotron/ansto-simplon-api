@@ -3,7 +3,11 @@ import os
 
 from fastapi import FastAPI
 
-from schemas.configuration import FrameTime, NumberOfImages
+from schemas.configuration import (
+    SimplonRequestAny,
+    SimplonRequestFloat,
+    SimplonRequestInt,
+)
 from simulate_zmq_stream import ZmqStream
 
 app = FastAPI()
@@ -53,14 +57,30 @@ def disarm():
 
 
 @app.put("/detector/api/1.8.0/config/frame_time")
-async def set_frame_time(frame_time: FrameTime):
+async def set_frame_time(frame_time: SimplonRequestFloat):
     return {"value": frame_time.value}
 
 
 @app.put("/detector/api/1.8.0/config/nimages")
-async def set_nimages(number_of_images: NumberOfImages):
+async def set_nimages(number_of_images: SimplonRequestInt):
     stream.number_of_frames_per_trigger = number_of_images.value
     return {"value": stream.number_of_frames_per_trigger}
+
+
+@app.get("/detector/api/1.8.0/config/nimages")
+async def get_nimages():
+    return {"value": stream.number_of_frames_per_trigger}
+
+
+@app.put("/stream/api/1.8.0/config/header_appendix")
+async def set_user_data(user_data: SimplonRequestAny):
+    stream.user_data = user_data.value
+    return {"value": stream.user_data}
+
+
+@app.get("/stream/api/1.8.0/config/header_appendix")
+async def get_user_data():
+    return {"value": stream.user_data}
 
 
 @app.get("/detector/api/1.8.0/config/sensor_thickness")

@@ -1,6 +1,7 @@
 import logging
 import time
 from copy import deepcopy
+from typing import Any
 
 import bitshuffle
 import cbor2
@@ -81,6 +82,8 @@ class ZmqStream:
         self.frame_id = 0
 
         self.image_number = 0  # used to mimic the dectris image number
+
+        self.user_data = None  # Check what's the default dectris value
 
         logging.info("Loading dataset...")
         self.frames = self.create_list_of_compressed_frames(
@@ -224,6 +227,7 @@ class ZmqStream:
         logging.info("Sending start message")
         self.start_message["series_id"] = self.sequence_id
         self.start_message["number_of_images"] = self.number_of_frames_per_trigger
+        self.start_message["user_data"] = self.user_data
         message = cbor2.dumps(self.start_message)
         self.socket.send(message)
 
@@ -327,3 +331,31 @@ class ZmqStream:
         """
         self._number_of_frames_per_trigger = value
         logging.info(f"nimages set to: {value}")
+
+    @property
+    def user_data(self) -> Any:
+        """
+        Gets the user data
+
+        Returns
+        -------
+        self._user_data : Any
+            The user data
+        """
+        return self._user_data
+
+    @user_data.setter
+    def user_data(self, value: Any) -> None:
+        """
+        Sets the user data
+
+        Parameters
+        ----------
+        value : Any
+            New value
+
+        Returns
+        -------
+        None
+        """
+        self._user_data = value
