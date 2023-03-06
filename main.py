@@ -67,13 +67,18 @@ async def set_nimages(number_of_images: SimplonRequestInt):
     return {"value": stream.number_of_frames_per_trigger}
 
 
-@app.put("/detector/api/1.8.0/config/user_data")
+@app.get("/detector/api/1.8.0/config/nimages")
+async def get_nimages():
+    return {"value": stream.number_of_frames_per_trigger}
+
+
+@app.put("/stream/api/1.8.0/config/header_appendix")
 async def set_user_data(user_data: SimplonRequestAny):
     stream.user_data = user_data.value
     return {"value": stream.user_data}
 
 
-@app.get("/detector/api/1.8.0/config/user_data")
+@app.get("/stream/api/1.8.0/config/header_appendix")
 async def get_user_data():
     return {"value": stream.user_data}
 
