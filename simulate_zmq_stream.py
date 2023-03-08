@@ -1,4 +1,5 @@
 import logging
+import struct
 import time
 from copy import deepcopy
 from typing import Any
@@ -7,7 +8,6 @@ import bitshuffle
 import cbor2
 import h5py
 import hdf5plugin  # noqa
-import lz4.frame
 import numpy as np
 import numpy.typing as npt
 import zmq
@@ -33,7 +33,6 @@ class ZmqStream:
         self,
         address: str,
         hdf5_file_path: str,
-        compression: str = "bslz4",
         delay_between_frames: float = 0.1,
         number_of_data_files: int = 1,
         number_of_frames_per_trigger: int = 200,
@@ -45,9 +44,6 @@ class ZmqStream:
             ZMQ stream address, e.g. tcp://*:5555
         hdf5_file_path : str
             Path of the hdf5 file
-        compression : str, optional
-            Compression type. Accepted compression types are lz4 and bslz4.
-            Default value is bslz4
         delay_between_frames : float, optional
             Time delay between images sent via the ZeroMQ stream [seconds]
         number_of_data_files : int, optional
@@ -62,7 +58,7 @@ class ZmqStream:
 
         self.address = address
         self.hdf5_file_path = hdf5_file_path
-        self.compression = compression
+        self.compression = "bslz4"
         self.delay_between_frames = delay_between_frames
         self.number_of_data_files = number_of_data_files
         self.number_of_frames_per_trigger = number_of_frames_per_trigger
@@ -83,7 +79,7 @@ class ZmqStream:
 
         self.image_number = 0  # used to mimic the dectris image number
 
-        self.user_data = None  # Check what's the default dectris value
+        self.user_data = ""  # an empty string is the real default value
 
         logging.info("Loading dataset...")
         self.frames = self.create_list_of_compressed_frames(
@@ -148,25 +144,28 @@ class ZmqStream:
             logging.info(f"Compression type: {self.compression}. Compressing data...")
             for ii in trange(number_of_frames_per_data_file[jj]):
                 image_message = deepcopy(self.image_message)
-                if compression == "lz4":
-                    image = lz4.frame.compress(datafile_list[jj][ii])
-                    image_message["channels"][0]["compression"] = "lz4"
-                elif compression == "bslz4":
+                # if compression == "lz4":
+                #    image = lz4.frame.compress(datafile_list[jj][ii])
+                #    # image_message["data"]["threshold_1"]["compression"] = "lz4"
+                if compression.lower() == "bslz4":
                     image = bitshuffle.compress_lz4(datafile_list[jj][ii]).tobytes()
-                    image_message["channels"][0]["compression"] = "bslz4"
-                elif compression == "no_compression":
+                    image_contents = self.create_image_cbor_object(
+                        image, str(dtype), array_shape
+                    )
+
+                elif compression.lower() == "none":
                     image = datafile_list[jj][ii].tobytes()
-                    image_message["channels"][0]["compression"] = "no_compression"
+                    image_contents = self.create_image_cbor_object(
+                        image, str(dtype), array_shape, compressed_image=False
+                    )
                 else:
                     raise NotImplementedError(
                         "The allowed compression types are lz4, bslz4 and "
-                        "no_compression"
+                        f"no_compression, not {compression}"
                     )
 
-                # Fill in missing bits.
-                image_message["channels"][0]["data"] = image
-                image_message["channels"][0]["data_type"] = str(dtype)
-                image_message["channels"][0]["array_shape"] = array_shape
+                data = cbor2.CBORTag(40, [array_shape, image_contents])
+                image_message["data"]["threshold_1"] = data
 
                 frame_list.append(image_message)
 
@@ -175,6 +174,69 @@ class ZmqStream:
         logging.info(f"Number of unique frames: {len(frame_list)}")
         del datafile_list
         return frame_list
+
+    def create_image_cbor_object(
+        self,
+        image: bytes,
+        dtype: str,
+        shape: tuple[int, int],
+        compressed_image: bool = True,
+    ) -> cbor2.CBORTag | bytes:
+        """
+        Creates a cbor object containing a compressed frame and frame metadata.
+        Here we additionally add the bytes-header necessary to
+        1) use the dectris decompression library, and 2) write datafiles directly to
+        disk without having to decompress frames.
+
+        Parameters
+        ----------
+        image : bytes
+            A compressed or uncompressed image in bytes format
+        dtype : str
+            Data type, e.g. 'uint32'
+        shape : tuple[int, int]
+            Shape of the array
+
+        Returns
+        -------
+        cbor2.CBORTag
+            A cbor2.CBORTag object containing the compressed or uncompressed image.
+            If the image is compressed, we add metadata which includes the compression
+            type and element size.
+
+        Raises
+        ------
+        NotImplementedError
+            An error if the data type is not uint32 or uint16
+        """
+        if dtype == "uint32":
+            element_size = 4
+            tag = 70
+        elif dtype == "uint16":
+            element_size = 2
+            tag = 69
+        else:
+            raise NotImplementedError(
+                f"Supported types are uint32 and uint16, not {dtype}"
+            )
+
+        if not compressed_image:
+            return cbor2.CBORTag(tag, image)
+
+        bytes_number_of_elements = struct.pack(
+            ">q", (shape[0] * shape[1] * element_size)
+        )
+        # TODO: There's probably a way to write the bytes_block_size with
+        # the struct library
+        bytes_block_size = b"\x00\x00 \x00"
+
+        byte_array = bytes_number_of_elements + bytes_block_size + image
+
+        image_obj = cbor2.CBORTag(56500, [self.compression, element_size, byte_array])
+
+        image_contents = cbor2.CBORTag(tag, image_obj)
+
+        return image_contents
 
     def stream_frames(self, compressed_image_list: list[dict]) -> None:
         """Send images through a ZeroMQ stream
@@ -359,3 +421,43 @@ class ZmqStream:
         None
         """
         self._user_data = value
+
+    @property
+    def compression(self) -> str:
+        """
+        Gets the compression type
+
+        Returns
+        -------
+        self._user_data : Any
+            The user data
+        """
+        return self._compression
+
+    @compression.setter
+    def compression(self, value: str) -> None:
+        """
+        Sets the compression type
+
+        Parameters
+        ----------
+        value : str
+            New value
+
+        Returns
+        -------
+        None
+        """
+        allowed_compressions = ["bslz4", "none"]
+        if value.lower() in allowed_compressions:
+            self._compression = value
+            try:
+                self.frames = self.create_list_of_compressed_frames(
+                    self.hdf5_file_path, self.compression
+                )
+            except AttributeError:
+                pass
+        else:
+            raise ValueError(
+                "Allowed compressions are bslz4 and none only" f"not {value}"
+            )

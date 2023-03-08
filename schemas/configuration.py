@@ -13,3 +13,7 @@ class SimplonRequestFloat(BaseModel):
 
 class SimplonRequestAny(BaseModel):
     value: Any
+
+
+class SimplonRequestStr(BaseModel):
+    value: str

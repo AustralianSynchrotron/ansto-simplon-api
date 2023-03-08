@@ -155,6 +155,8 @@ class Parse:
             "hardware_start_time": "FIX",
             "hardware_stop_time": "FIX",
             "hardware_exposure_time": "FIX",
+            "data": {"threshold_1": None},
+            # Channels key is deprecated in favour of the data key
             # One list per threshold; so normally 1 but up to N.
             "channels": [
                 {
