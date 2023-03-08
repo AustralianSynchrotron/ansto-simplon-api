@@ -7,6 +7,7 @@ from schemas.configuration import (
     SimplonRequestAny,
     SimplonRequestFloat,
     SimplonRequestInt,
+    SimplonRequestStr,
 )
 from simulate_zmq_stream import ZmqStream
 
@@ -15,16 +16,12 @@ app = FastAPI()
 ZMQ_ADDRESS = os.environ.get("ZMQ_ADDRESS", "tcp://*:5555")
 HDF5_MASTER_FILE = os.environ["HDF5_MASTER_FILE"]
 DELAY_BETWEEN_FRAMES = float(os.environ.get("DELAY_BETWEEN_FRAMES", "0.1"))
-COMPRESSION_TYPE = os.environ.get("COMPRESSION_TYPE", "lz4")
 NUMBER_OF_DATA_FILES = int(os.environ.get("NUMBER_OF_DATA_FILES", "2"))
-NUMBER_OF_FRAMES_PER_TRIGGER = int(
-    os.environ.get("NUMBER_OF_FRAMES_PER_TRIGGER", "400")
-)
+NUMBER_OF_FRAMES_PER_TRIGGER = int(os.environ.get("NUMBER_OF_FRAMES_PER_TRIGGER", "1"))
 
 stream = ZmqStream(
     address=ZMQ_ADDRESS,
     hdf5_file_path=HDF5_MASTER_FILE,
-    compression=COMPRESSION_TYPE,
     delay_between_frames=DELAY_BETWEEN_FRAMES,
     number_of_data_files=NUMBER_OF_DATA_FILES,
     number_of_frames_per_trigger=NUMBER_OF_FRAMES_PER_TRIGGER,
@@ -70,6 +67,17 @@ async def set_nimages(number_of_images: SimplonRequestInt):
 @app.get("/detector/api/1.8.0/config/nimages")
 async def get_nimages():
     return {"value": stream.number_of_frames_per_trigger}
+
+
+@app.put("/detector/api/1.8.0/config/compression")
+async def set_compression(compression: SimplonRequestStr):
+    stream.compression = compression.value
+    return {"value": stream.compression}
+
+
+@app.get("/detector/api/1.8.0/config/compression")
+async def get_compression():
+    return {"value": stream.compression}
 
 
 @app.put("/stream/api/1.8.0/config/header_appendix")
@@ -146,11 +154,6 @@ async def get_bit_depth_image():
 @app.get("/detector/api/1.8.0/config/bit_depth_readout")
 async def get_bit_depth_readout():
     return {"value": 16}
-
-
-@app.get("/detector/api/1.8.0/config/compression")
-async def get_compression():
-    return {"value": COMPRESSION_TYPE}
 
 
 @app.get("/detector/api/1.8.0/config/countrate_correction_count_cutoff")
