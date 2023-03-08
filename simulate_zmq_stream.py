@@ -201,7 +201,7 @@ class ZmqStream:
         -------
         cbor2.CBORTag
             A cbor2.CBORTag object containing the compressed or uncompressed image.
-            If the image is compressed, we add , metadata which includes the compression
+            If the image is compressed, we add metadata which includes the compression
             type and element size.
 
         Raises
