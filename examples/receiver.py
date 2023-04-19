@@ -19,7 +19,7 @@ tag_decoders = {
 
 
 def decompress_image(zmq_image_message: dict) -> npt.NDArray:
-    """Decompresses an image from the the zmq image message
+    """Decompresses an image from the zmq image message
 
     Parameters
     ----------
