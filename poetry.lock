@@ -145,6 +145,14 @@ optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
+name = "dectris-compression"
+version = "0.2.3"
+description = "DECTRIS compression algorithms"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "distlib"
 version = "0.3.6"
 description = "Distribution utilities"
@@ -538,7 +546,7 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "3a90d4d366b7c4c57f057f8739c3b6ca2701ecdb9fca9374c1a23f3aef5a5ac6"
+content-hash = "fd582a201791ac7e59b1e578867e5f14db6cafcf5d77b92f747501785f4b9d73"
 
 [metadata.files]
 anyio = []
@@ -553,6 +561,7 @@ charset-normalizer = []
 click = []
 colorama = []
 cython = []
+dectris-compression = []
 distlib = []
 fastapi = []
 filelock = []
