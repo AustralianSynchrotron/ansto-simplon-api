@@ -1,11 +1,10 @@
 import logging
-from typing import Any
 
-import bitshuffle
 import cbor2
-import lz4.frame
 import numpy as np
+import numpy.typing as npt
 import zmq
+from dectris.compression import decompress
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,57 +12,39 @@ logging.basicConfig(
     datefmt="%d-%m-%Y %H:%M:%S",
 )
 
-
-def decompress_lz4_image(
-    image: bytes, shape: tuple[int, int], dtype: np.dtype[Any]
-) -> np.ndarray:
-    """Decompress lz4 byte images
-
-    Parameters
-    ----------
-    image : bytes
-        Image in bytes format
-    shape : tuple[int,int]
-        Shape of the original image
-    dtype : np.dtype[Any]
-        Data type of the original image
-
-    Returns
-    -------
-    reshaped_data : np.ndarray
-        Decompressed image
-    """
-
-    decompressed_image = lz4.frame.decompress(image)
-    deserialized_bytes = np.frombuffer(decompressed_image, dtype=dtype)
-    reshaped_data = np.reshape(deserialized_bytes, newshape=shape)
-
-    return reshaped_data
+tag_decoders = {
+    69: "<u2",
+    70: "<u4",
+}
 
 
-def decompress_bslz4_image(
-    image: bytes, shape: tuple[int, int], dtype: np.dtype[Any]
-) -> np.ndarray:
-    """Decompress bslz4 byte images
+def decompress_image(zmq_image_message: dict) -> npt.NDArray:
+    """Decompresses an image from the the zmq image message
 
     Parameters
     ----------
-    image : bytes
-        Image in bytes format
-    shape : tuple[int,int]
-        Shape of the original image
-    dtype : np.dtype[Any]
-        Data type of the original image
+    zmq_image_message : dict
+        ZMQ image message
 
     Returns
     -------
-    decompressed_image : np.ndarray
-        Decompressed image
+    npt.NDArray
+        A decompressed numpy array
     """
-    numpy_array = np.frombuffer(image, dtype="uint8")
-    decompressed_image = bitshuffle.decompress_lz4(numpy_array, shape, dtype, 0)
 
-    return decompressed_image
+    data: cbor2.CBORTag = zmq_image_message["data"]["threshold_1"]
+    contents: cbor2.CBORTag
+    shape, contents = data.value
+    dtype = tag_decoders[contents.tag]
+    if type(contents.value) == bytes:
+        # This means the image has not been compressed,
+        # e.g. compression=none
+        compression_type = None
+        return np.frombuffer(contents.value, dtype=dtype).reshape(shape)
+    else:
+        compression_type, elem_size, image = contents.value.value
+        decompressed_bytes = decompress(image, compression_type, elem_size=elem_size)
+        return np.frombuffer(decompressed_bytes, dtype=dtype).reshape(shape)
 
 
 context = zmq.Context()
@@ -73,12 +54,6 @@ socket = context.socket(zmq.PULL)
 endpoint = "tcp://0.0.0.0:5555"
 
 count = 0
-
-data_type = {
-    "uint8": np.dtype(np.uint8),
-    "uint16": np.dtype(np.uint16),
-    "uint32": np.dtype(np.uint32),
-}
 
 with socket.connect(endpoint):
     logging.info(f"PULL {endpoint}")
@@ -90,24 +65,10 @@ with socket.connect(endpoint):
             logging.info("-" * 80)
             logging.info(f"series_id: {loaded_message['series_id']}")
             logging.info(f"image_id: {loaded_message['image_id']}")
-
-            if loaded_message["channels"][0]["compression"] == "lz4":
-                loaded_message["channels"][0]["data"] = decompress_lz4_image(
-                    loaded_message["channels"][0]["data"],
-                    loaded_message["channels"][0]["array_shape"],
-                    data_type[loaded_message["channels"][0]["data_type"]],
-                )
-                count += 1
-
-            elif loaded_message["channels"][0]["compression"] == "bslz4":
-                loaded_message["channels"][0]["data"] = decompress_bslz4_image(
-                    loaded_message["channels"][0]["data"],
-                    loaded_message["channels"][0]["array_shape"],
-                    data_type[loaded_message["channels"][0]["data_type"]],
-                )
-                count += 1
-
+            image = decompress_image(loaded_message)
+            count += 1
             logging.info(f"Successfully processed {count} frames")
 
         elif loaded_message["type"] == "start" or "end":
             logging.info(loaded_message)
+            count = 0

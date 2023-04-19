@@ -19,6 +19,7 @@ cbor2 = "5.4.2"
 Cython = "0.29.28"
 bitshuffle = {git = "https://github.com/kiyo-masui/bitshuffle.git", rev = "0.4.2"}
 requests = "2.27.1"
+dectris-compression = "^0.2.3"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.17.0"
