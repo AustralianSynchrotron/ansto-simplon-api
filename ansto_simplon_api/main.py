@@ -1,5 +1,3 @@
-# import glob
-
 from fastapi import FastAPI
 
 from .routes.detector.command import router as command

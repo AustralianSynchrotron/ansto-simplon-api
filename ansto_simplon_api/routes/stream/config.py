@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from ...schemas.configuration import SimplonRequestAny
 from ...simulate_zmq_stream import zmq_stream
 
-router = APIRouter(prefix="/detector/api/1.8.0/command", tags=["Stream Configuration"])
+router = APIRouter(prefix="/stream/api/1.8.0/config", tags=["Stream Configuration"])
 
 
 @router.put("/header_appendix")
