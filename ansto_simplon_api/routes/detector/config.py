@@ -1,8 +1,14 @@
 from fastapi import APIRouter
+
+from ...schemas.configuration import (
+    SimplonRequestFloat,
+    SimplonRequestInt,
+    SimplonRequestStr,
+)
 from ...simulate_zmq_stream import zmq_stream
-from ...schemas.configuration import SimplonRequestFloat, SimplonRequestInt, SimplonRequestStr
 
 router = APIRouter(prefix="/detector/api/1.8.0/config", tags=["Detector Configuration"])
+
 
 @router.put("/frame_time")
 async def set_frame_time(frame_time: SimplonRequestFloat):

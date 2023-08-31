@@ -2,8 +2,8 @@ import logging
 import struct
 import time
 from copy import deepcopy
-from typing import Any
 from os import environ
+from typing import Any
 
 import bitshuffle
 import cbor2
