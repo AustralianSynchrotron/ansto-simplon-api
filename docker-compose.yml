@@ -8,7 +8,6 @@ services:
       ZMQ_ADDRESS: tcp://*:5555
       HDF5_MASTER_FILE: /share_data/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5
       DELAY_BETWEEN_FRAMES: 0.0 # seconds
-      COMPRESSION_TYPE: bslz4 # allowed options are: lz4, bslz4, or no_compression
       NUMBER_OF_DATA_FILES: 1 # 2 seems to be the maximum number of files we can load into memory (16M data)
       NUMBER_OF_FRAMES_PER_TRIGGER: 30 # A number multiple of 200
     ports:

@@ -1,47 +1,34 @@
 # MX Sim-Plon API
 A simulated Dectris Simplon API. Aims to have the same RESTlike interface and produce a ZMQ stream of data from an input Hdf5 file.
+The input HDF5 file is defined by the environment variable `HDF5_MASTER_FILE`, e.g. `HDF5_MASTER_FILE=/path/to/HDF5_masterfile.h5`
 
 Currently generates a [Stream2 alpha] release compatible ZMQ stream.
 
 ## Setup
 
-### Docker Compose
-1) To run the simulated simplon API, the path of a HDF5 master file has to be specified via the environment variable `HDF5_MASTER_FILE`,
-e.g. `HDF5_MASTER_FILE=/path/to/HDF5_masterfile/`. Other parameters can also be configured via environment variables, including:
+1. **Simulated Simplon API Configuration**
 
-      * DELAY_BETWEEN_FRAMES (in seconds, by default 0.1 s)
-      * NUMBER_OF_DATA_FILES: The number of datafiles from the master file loaded into memory, by default 2
-      * NUMBER_OF_FRAMES_PER_TRIGGER: By default 30, but can be changed via the `/detector/api/1.8.0/config/nimages` endpoint
+   To run the simulated Simplon API, you need to specify the path of an HDF5 master file using the `HDF5_MASTER_FILE` environment variable. You can also configure other parameters using the following environment variables:
 
-2) Run docker compose to build the image and start the service.
+   - `DELAY_BETWEEN_FRAMES`: Specifies the delay between frames in seconds (default: 0.1 s).
+   - `NUMBER_OF_DATA_FILES`: Sets the number of data files from the master file loaded into memory (default: 1). Note that the datafiles are stored in memory, so they should not be too large.
+   - `NUMBER_OF_FRAMES_PER_TRIGGER`: Controls the number of frames per trigger. By default, it's set to 30, but you can modify it using the `/detector/api/1.8.0/config/nimages` endpoint.
 
-```text
-docker compose up --detach
-```
+2. **Running the simulated SIMPLON API**
+    * Install the library via 1) `poetry install` or 2) `pip install .`
+    * Set the HDF5 file path: ```export  HDF5_MASTER_FILE=/path/to/HDF5_master_file```
+    * Run the FAST-API application:
+    ```uvicorn ansto_simplon_api.main:app```
 
-### Manual Setup
 
-1) Build the container image `docker build -t sim_plon_api .`
 
-2) Create a volume using the cifs driver to give the container access to the SMB share.
+3. **(Optional) Running the simplon API with Docker Compose**
 
-```text
-docker volume create --driver local --opt type=cifs \
-    --opt device=//10.244.101.66/smd-share \
-    --opt o=username=guest,password=guest,vers=2.0,uid=1000,gid=1000 \
-    --name simplon_share_data
-```
+   To build the image and start the service, modify the docker compose file with the corresponding environment variables and the run:
 
-3) Start the container attaching the new SMB volume.
-
-> Note: If required, modify the "HDF5_MASTER_FILE" environment variable to point to another HDF5 file hosted on the MX SMB share.
-
-```text
-docker run --rm -dt --name sim_plon_api \
-    -p 8000:8000 -p 5555:5555 \
-    -e HDF5_MASTER_FILE='/share_data/4Mrasterdata/01x10/testraster01_0008_master.h5' \
-    -v simplon_share_data:/share_data sim_plon_api
-```
+   ```bash
+   docker compose up --detach
+   ```
 
 ## Example Usage
 

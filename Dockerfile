@@ -18,9 +18,8 @@ RUN poetry config virtualenvs.create false
 RUN poetry install
 
 # Copy across source code
-COPY schemas/ /home/asuser/schemas
-COPY simulate_zmq_stream.py parse_master_file.py main.py /home/asuser/
+COPY ansto_simplon_api /home/asuser/ansto_simplon_api
 USER asuser
 
 EXPOSE 8000 5555
-ENTRYPOINT uvicorn main:app --host 0.0.0.0 --port 8000
+ENTRYPOINT uvicorn ansto_simplon_api.main:app --host 0.0.0.0 --port 8000
