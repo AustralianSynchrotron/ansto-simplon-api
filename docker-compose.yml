@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  mxsimplonapi:
+  mx-simplon-api:
     build: .
-    container_name: mxsimplonapi
+    container_name: mx-simplon-api
     environment:
       ZMQ_ADDRESS: tcp://*:5555
       HDF5_MASTER_FILE: /share_data/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5

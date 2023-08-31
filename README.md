@@ -6,18 +6,17 @@ Currently generates a [Stream2 alpha] release compatible ZMQ stream.
 ## Setup
 
 ### Docker Compose
+1) To run the simulated simplon API, the path of a HDF5 master file has to be specified via the environment variable `HDF5_MASTER_FILE`,
+e.g. `HDF5_MASTER_FILE=/path/to/HDF5_masterfile/`. Other parameters can also be configured via environment variables, including:
 
-1) If required, edit the "docker-compose.yml" file and modify the "HDF5_MASTER_FILE" environment variable to point to another HDF5 file hosted on the MX SMB share. Additional options can be also be configured:
-
-      * DELAY_BETWEEN_FRAMES (in seconds)
-      * COMPRESSION_TYPE: Allowed options are: lz4, bslz4, or no_compression
-      * NUMBER_OF_DATA_FILES: 2 # 2 seems to be the maximum number of files we can load into memory (16M data)
+      * DELAY_BETWEEN_FRAMES (in seconds, by default 0.1 s)
+      * NUMBER_OF_DATA_FILES: The number of datafiles from the master file loaded into memory, by default 2
       * NUMBER_OF_FRAMES_PER_TRIGGER: By default 30, but can be changed via the `/detector/api/1.8.0/config/nimages` endpoint
 
 2) Run docker compose to build the image and start the service.
 
 ```text
-docker-compose up
+docker compose up --detach
 ```
 
 ### Manual Setup
