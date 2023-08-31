@@ -130,3 +130,8 @@ async def get_x_pixels_in_detector():
 @router.get("/y_pixels_in_detector")
 async def get_y_pixels_in_detector():
     return {"value": 3262}
+
+
+@router.get("/ntrigger")
+async def get_ntrigger():
+    return {"value": 1}

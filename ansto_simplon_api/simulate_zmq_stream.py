@@ -2,6 +2,7 @@ import logging
 import struct
 import time
 from copy import deepcopy
+from datetime import datetime, timezone
 from os import environ
 from typing import Any
 
@@ -258,8 +259,11 @@ class ZmqStream:
             try:
                 # Add series number
                 compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
-
                 compressed_image_list[self.frame_id]["image_id"] = self.image_number
+                compressed_image_list[self.frame_id]["series_date"] = datetime.now(
+                    tz=timezone.utc
+                )
+                compressed_image_list[self.frame_id]["stop_time"] = [50000000, 50000000]
 
                 self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
                 self.frame_id += 1
@@ -267,8 +271,11 @@ class ZmqStream:
             except IndexError:
                 self.frame_id = 0
                 compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
-
                 compressed_image_list[self.frame_id]["image_id"] = self.image_number
+                compressed_image_list[self.frame_id]["series_date"] = datetime.now(
+                    tz=timezone.utc
+                )
+                compressed_image_list[self.frame_id]["stop_time"] = [50000000, 50000000]
 
                 self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
 
