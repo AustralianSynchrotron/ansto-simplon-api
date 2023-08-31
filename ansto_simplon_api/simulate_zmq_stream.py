@@ -3,6 +3,7 @@ import struct
 import time
 from copy import deepcopy
 from typing import Any
+from os import environ
 
 import bitshuffle
 import cbor2
@@ -13,7 +14,7 @@ import numpy.typing as npt
 import zmq
 from tqdm import trange
 
-from parse_master_file import Parse
+from .parse_master_file import Parse
 
 logging.basicConfig(
     level=logging.INFO,
@@ -461,3 +462,18 @@ class ZmqStream:
             raise ValueError(
                 "Allowed compressions are bslz4 and none only" f"not {value}"
             )
+
+
+ZMQ_ADDRESS = environ.get("ZMQ_ADDRESS", "tcp://*:5555")
+HDF5_MASTER_FILE = environ["HDF5_MASTER_FILE"]
+DELAY_BETWEEN_FRAMES = float(environ.get("DELAY_BETWEEN_FRAMES", "0.1"))
+NUMBER_OF_DATA_FILES = int(environ.get("NUMBER_OF_DATA_FILES", "2"))
+NUMBER_OF_FRAMES_PER_TRIGGER = int(environ.get("NUMBER_OF_FRAMES_PER_TRIGGER", "1"))
+
+zmq_stream = ZmqStream(
+    address=ZMQ_ADDRESS,
+    hdf5_file_path=HDF5_MASTER_FILE,
+    delay_between_frames=DELAY_BETWEEN_FRAMES,
+    number_of_data_files=NUMBER_OF_DATA_FILES,
+    number_of_frames_per_trigger=NUMBER_OF_FRAMES_PER_TRIGGER,
+)
