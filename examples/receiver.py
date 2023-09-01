@@ -69,6 +69,6 @@ with socket.connect(endpoint):
             count += 1
             logging.info(f"Successfully processed {count} frames")
 
-        elif loaded_message["type"] == "start" or "end":
+        elif loaded_message["type"] == "start" or loaded_message["type"] == "end":
             logging.info(loaded_message)
             count = 0

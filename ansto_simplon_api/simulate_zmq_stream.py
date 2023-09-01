@@ -1,6 +1,7 @@
 import logging
 import struct
 import time
+import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
 from os import environ
@@ -82,6 +83,7 @@ class ZmqStream:
         self.image_number = 0  # used to mimic the dectris image number
 
         self.user_data = ""  # an empty string is the real default value
+        self.series_unique_id = None
 
         logging.info("Loading dataset...")
         self.frames = self.create_list_of_compressed_frames(
@@ -264,6 +266,9 @@ class ZmqStream:
                     tz=timezone.utc
                 )
                 compressed_image_list[self.frame_id]["stop_time"] = [50000000, 50000000]
+                compressed_image_list[self.frame_id][
+                    "series_unique_id"
+                ] = self.series_unique_id
 
                 self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
                 self.frame_id += 1
@@ -276,6 +281,9 @@ class ZmqStream:
                     tz=timezone.utc
                 )
                 compressed_image_list[self.frame_id]["stop_time"] = [50000000, 50000000]
+                compressed_image_list[self.frame_id][
+                    "series_unique_id"
+                ] = self.series_unique_id
 
                 self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
 
@@ -293,11 +301,13 @@ class ZmqStream:
         -------
         None
         """
+        self.series_unique_id = str(uuid.uuid4())
 
         logging.info("Sending start message")
         self.start_message["series_id"] = self.sequence_id
         self.start_message["number_of_images"] = self.number_of_frames_per_trigger
         self.start_message["user_data"] = self.user_data
+        self.start_message["series_unique_id"] = self.series_unique_id
         message = cbor2.dumps(self.start_message)
         self.socket.send(message)
 
@@ -312,6 +322,7 @@ class ZmqStream:
 
         logging.info("Sending end message")
         self.end_message["series_id"] = self.sequence_id
+        self.end_message["series_unique_id"] = self.series_unique_id
         message = cbor2.dumps(self.end_message)
         self.socket.send(message)
 
