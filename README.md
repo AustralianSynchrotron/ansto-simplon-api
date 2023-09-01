@@ -2,7 +2,7 @@
 A simulated Dectris Simplon API. Aims to have the same RESTlike interface and produce a ZMQ stream of data from an input Hdf5 file.
 The input HDF5 file is defined by the environment variable `HDF5_MASTER_FILE`, e.g. `HDF5_MASTER_FILE=/path/to/HDF5_masterfile.h5`
 
-Currently generates a [Stream2 alpha] release compatible ZMQ stream.
+Currently generates a [Stream V2] release compatible ZMQ stream.
 
 ## Setup
 
@@ -47,7 +47,7 @@ python examples/trigger_detector.py
 ```
 After running this script, you should see messages being received by the `receiver.py` script.
 
-[Stream2 alpha]: https://github.com/dectris/documentation/tree/473d768c3eddc1989da00c941081847955c94e96/stream_v2
+[Stream V2]: https://github.com/dectris/documentation/tree/main/stream_v2
 
 ## Documentation
 You can see the endpoints currently implemented by accessing the interactive API documentation at [http://localhost:8000/docs](http://localhost:8000/docs). Ensure that the simulated SIMPLON API is up and running to access the documentation.
