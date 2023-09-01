@@ -21,8 +21,8 @@ volumes:
     driver: local
     driver_opts:
       type: cifs
-      device: //10.244.101.66/smd-share
-      o: username=guest,password=guest,vers=2.0,uid=1000,gid=1000
+      device: //12.345.678.90/smd-share
+      o: username=username,password=password,vers=2.0,uid=1000,gid=1000
 
 networks:
   default:

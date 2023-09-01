@@ -6,7 +6,7 @@ Currently generates a [Stream2 alpha] release compatible ZMQ stream.
 
 ## Setup
 
-1. **Simulated Simplon API Configuration**
+**Simulated Simplon API Configuration**
 
    To run the simulated Simplon API, you need to specify the path of an HDF5 master file using the `HDF5_MASTER_FILE` environment variable. You can also configure other parameters using the following environment variables:
 
@@ -14,30 +14,40 @@ Currently generates a [Stream2 alpha] release compatible ZMQ stream.
    - `NUMBER_OF_DATA_FILES`: Sets the number of data files from the master file loaded into memory (default: 1). Note that the datafiles are stored in memory, so they should not be too large.
    - `NUMBER_OF_FRAMES_PER_TRIGGER`: Controls the number of frames per trigger. By default, it's set to 30, but you can modify it using the `/detector/api/1.8.0/config/nimages` endpoint.
 
-2. **Running the simulated SIMPLON API**
-    * Install the library via 1) `poetry install` or 2) `pip install .`
-    * Set the HDF5 file path: ```export  HDF5_MASTER_FILE=/path/to/HDF5_master_file```
-    * Run the FAST-API application:
-    ```uvicorn ansto_simplon_api.main:app```
+## Running the simulated SIMPLON API
 
+Follow these steps to run the simulated SIMPLON API and ensure its proper functionality:
 
+1. **Install the Library**
+   You have two options to install the library:
+   - Using Poetry: Run `poetry install`.
+   - Using pip: Run `pip install .`.
 
-3. **(Optional) Running the simplon API with Docker Compose**
-
-   To build the image and start the service, modify the docker compose file with the corresponding environment variables and the run:
-
+2. **Set the HDF5 File Path**
+   Before running the API, set the `HDF5_MASTER_FILE` environment variable using the following command:
    ```bash
-   docker compose up --detach
+   export HDF5_MASTER_FILE=/path/to/HDF5_master_file
    ```
 
-## Example Usage
+3. **Run the FAST-API application**
+   Launch the FAST-API application
+   ```bash
+   uvicorn ansto_simplon_api.main:app
+   ```
 
-1) Start the consumer: `python examples/receiver.py`
-
-2) Trigger the detector using our sim_plon_api: `python examples/trigger_detector.py`
-
-<!-- NOTE: If you need to use a different HDF5 file, copy the master hdf5 file and the data file to
-the `hdf5_data` folder to run this example, e.g. `testcrystal_0009_master.h5` and `testcrystal_0009_data_000001.h5`.
-At the moment only one master file can be in the `hdf5_data` folder -->
+4. **Start the ZMQ Consumer**
+Once the simulated SIMPLON API is up and running, you can verify its functionality by running the ZMQ receiver and triggering the detector:
+```bash
+python examples/receiver.py
+```
+5. **Arm, trigger and disarm the detector**
+Finally run the arm, trigger, and disarm script as follows:
+```bash
+python examples/trigger_detector.py
+```
+After running this script, you should see messages being received by the `receiver.py` script.
 
 [Stream2 alpha]: https://github.com/dectris/documentation/tree/473d768c3eddc1989da00c941081847955c94e96/stream_v2
+
+## Documentation
+You can see the endpoints currently implemented by accessing the interactive API documentation at [http://localhost:8000/docs](http://localhost:8000/docs). Ensure that the simulated SIMPLON API is up and running to access the documentation.
