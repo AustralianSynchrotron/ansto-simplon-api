@@ -138,8 +138,8 @@ class Parse:
             "series_id": None,  # int
             "series_unique_id": None,  # str
             "threshold_energy": {
-                "1": self.parse("threshold_energy"),
-                "2": self.parse("threshold_energy") * 3,
+                "threshold_1": self.parse("threshold_energy"),
+                "threshold_2": self.parse("threshold_energy") * 3,
             },
             "user_data": {"pi": float(np.pi)},
             "virtual_pixel_correction_applied": bool(

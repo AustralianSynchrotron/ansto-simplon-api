@@ -1,57 +1,53 @@
-# MX Sim-Plon API
+# ANSTO Sim-Plon API
 A simulated Dectris Simplon API. Aims to have the same RESTlike interface and produce a ZMQ stream of data from an input Hdf5 file.
+The input HDF5 file is defined by the environment variable `HDF5_MASTER_FILE`, e.g. `HDF5_MASTER_FILE=/path/to/HDF5_masterfile.h5`
 
-Currently generates a [Stream2 alpha] release compatible ZMQ stream.
+Currently generates a [Stream V2] release compatible ZMQ stream.
 
 ## Setup
 
-### Docker Compose
+**Simulated Simplon API Configuration**
 
-1) If required, edit the "docker-compose.yml" file and modify the "HDF5_MASTER_FILE" environment variable to point to another HDF5 file hosted on the MX SMB share. Additional options can be also be configured:
+   To run the simulated Simplon API, you need to specify the path of an HDF5 master file using the `HDF5_MASTER_FILE` environment variable. You can also configure other parameters using the following environment variables:
 
-      * DELAY_BETWEEN_FRAMES (in seconds)
-      * COMPRESSION_TYPE: Allowed options are: lz4, bslz4, or no_compression
-      * NUMBER_OF_DATA_FILES: 2 # 2 seems to be the maximum number of files we can load into memory (16M data)
-      * NUMBER_OF_FRAMES_PER_TRIGGER: By default 30, but can be changed via the `/detector/api/1.8.0/config/nimages` endpoint
+   - `DELAY_BETWEEN_FRAMES`: Specifies the delay between frames in seconds (default: 0.1 s).
+   - `NUMBER_OF_DATA_FILES`: Sets the number of data files from the master file loaded into memory (default: 1). Note that the datafiles are stored in memory, so they should not be too large.
+   - `NUMBER_OF_FRAMES_PER_TRIGGER`: Controls the number of frames per trigger. By default, it's set to 30, but you can modify it using the `/detector/api/1.8.0/config/nimages` endpoint.
 
-2) Run docker compose to build the image and start the service.
+## Running the simulated SIMPLON API
 
-```text
-docker-compose up
+Follow these steps to run the simulated SIMPLON API and ensure its proper functionality:
+
+1. **Install the Library**
+   You have two options to install the library:
+   - Using Poetry: Run `poetry install`.
+   - Using pip: Run `pip install .`.
+
+2. **Set the HDF5 File Path**
+   Before running the API, set the `HDF5_MASTER_FILE` environment variable using the following command:
+   ```bash
+   export HDF5_MASTER_FILE=/path/to/HDF5_master_file
+   ```
+
+3. **Run the FAST-API application**
+   Launch the FAST-API application
+   ```bash
+   uvicorn ansto_simplon_api.main:app
+   ```
+
+4. **Start the ZMQ Consumer**
+Once the simulated SIMPLON API is up and running, you can verify its functionality by running the ZMQ receiver and triggering the detector:
+```bash
+python examples/receiver.py
 ```
-
-### Manual Setup
-
-1) Build the container image `docker build -t sim_plon_api .`
-
-2) Create a volume using the cifs driver to give the container access to the SMB share.
-
-```text
-docker volume create --driver local --opt type=cifs \
-    --opt device=//10.244.101.66/smd-share \
-    --opt o=username=guest,password=guest,vers=2.0,uid=1000,gid=1000 \
-    --name simplon_share_data
+5. **Arm, trigger and disarm the detector**
+Finally run the arm, trigger, and disarm script as follows:
+```bash
+python examples/trigger_detector.py
 ```
+After running this script, you should see messages being received by the `receiver.py` script.
 
-3) Start the container attaching the new SMB volume.
+[Stream V2]: https://github.com/dectris/documentation/tree/main/stream_v2
 
-> Note: If required, modify the "HDF5_MASTER_FILE" environment variable to point to another HDF5 file hosted on the MX SMB share.
-
-```text
-docker run --rm -dt --name sim_plon_api \
-    -p 8000:8000 -p 5555:5555 \
-    -e HDF5_MASTER_FILE='/share_data/4Mrasterdata/01x10/testraster01_0008_master.h5' \
-    -v simplon_share_data:/share_data sim_plon_api
-```
-
-## Example Usage
-
-1) Start the consumer: `python examples/receiver.py`
-
-2) Trigger the detector using our sim_plon_api: `python examples/trigger_detector.py`
-
-<!-- NOTE: If you need to use a different HDF5 file, copy the master hdf5 file and the data file to
-the `hdf5_data` folder to run this example, e.g. `testcrystal_0009_master.h5` and `testcrystal_0009_data_000001.h5`.
-At the moment only one master file can be in the `hdf5_data` folder -->
-
-[Stream2 alpha]: https://github.com/dectris/documentation/tree/473d768c3eddc1989da00c941081847955c94e96/stream_v2
+## Documentation
+You can see the endpoints currently implemented by accessing the interactive API documentation at [http://localhost:8000/docs](http://localhost:8000/docs). Ensure that the simulated SIMPLON API is up and running to access the documentation.

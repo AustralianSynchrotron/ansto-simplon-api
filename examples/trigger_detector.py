@@ -10,7 +10,7 @@ print(r.text)
 print(f"{'-' * 20} Add user data {'-' * 20}")
 user_data = {
     "value": {
-        "sample_id": "my_sample",
+        "id": "my_sample",
         "grid_scan_type": "flat",
         "zmq_consumer_mode": "spotfinder",
         "number_of_columns": 5,

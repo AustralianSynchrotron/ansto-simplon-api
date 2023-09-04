@@ -1,24 +1,23 @@
 [tool.poetry]
-name = "sim_plon_api"
-version = "0.0.0"
+name = "ansto-simplon-api"
+version = "0.2.0"
 description = "Simulated simplon api"
 authors = ["Francisco Hernandez Vivanco <hernandf@ansto.gov.au>",
            "Daniel Eriksson <daniele@ansto.gov.au>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = "0.70.1"
-numpy = "1.22.0"
-pyzmq = "22.3.0"
-h5py = "3.6.0"
-hdf5plugin = "3.2.0"
-uvicorn = "0.16.0"
-lz4 = "4.0.0"
+fastapi = "0.103.0"
+numpy = "1.25.2"
+pyzmq = "25.1.1"
+h5py = "3.9.0"
+hdf5plugin = "4.1.3"
+uvicorn = "0.23.2"
+lz4 = "4.3.2"
 tqdm = "4.63.0"
-cbor2 = "5.4.2"
-Cython = "0.29.28"
-bitshuffle = {git = "https://github.com/kiyo-masui/bitshuffle.git", rev = "0.4.2"}
-requests = "2.27.1"
+cbor2 = "5.4.6"
+bitshuffle = "0.5.1"
+requests = "2.31.0"
 dectris-compression = "^0.2.3"
 
 [tool.poetry.dev-dependencies]

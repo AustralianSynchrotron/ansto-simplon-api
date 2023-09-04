@@ -1,7 +1,10 @@
 import logging
 import struct
 import time
+import uuid
 from copy import deepcopy
+from datetime import datetime, timezone
+from os import environ
 from typing import Any
 
 import bitshuffle
@@ -13,7 +16,7 @@ import numpy.typing as npt
 import zmq
 from tqdm import trange
 
-from parse_master_file import Parse
+from .parse_master_file import Parse
 
 logging.basicConfig(
     level=logging.INFO,
@@ -80,6 +83,7 @@ class ZmqStream:
         self.image_number = 0  # used to mimic the dectris image number
 
         self.user_data = ""  # an empty string is the real default value
+        self.series_unique_id = None
 
         logging.info("Loading dataset...")
         self.frames = self.create_list_of_compressed_frames(
@@ -257,8 +261,14 @@ class ZmqStream:
             try:
                 # Add series number
                 compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
-
                 compressed_image_list[self.frame_id]["image_id"] = self.image_number
+                compressed_image_list[self.frame_id]["series_date"] = datetime.now(
+                    tz=timezone.utc
+                )
+                compressed_image_list[self.frame_id]["stop_time"] = [50000000, 50000000]
+                compressed_image_list[self.frame_id][
+                    "series_unique_id"
+                ] = self.series_unique_id
 
                 self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
                 self.frame_id += 1
@@ -266,8 +276,14 @@ class ZmqStream:
             except IndexError:
                 self.frame_id = 0
                 compressed_image_list[self.frame_id]["series_id"] = self.sequence_id
-
                 compressed_image_list[self.frame_id]["image_id"] = self.image_number
+                compressed_image_list[self.frame_id]["series_date"] = datetime.now(
+                    tz=timezone.utc
+                )
+                compressed_image_list[self.frame_id]["stop_time"] = [50000000, 50000000]
+                compressed_image_list[self.frame_id][
+                    "series_unique_id"
+                ] = self.series_unique_id
 
                 self.socket.send(cbor2.dumps(compressed_image_list[self.frame_id]))
 
@@ -285,11 +301,13 @@ class ZmqStream:
         -------
         None
         """
+        self.series_unique_id = str(uuid.uuid4())
 
         logging.info("Sending start message")
         self.start_message["series_id"] = self.sequence_id
         self.start_message["number_of_images"] = self.number_of_frames_per_trigger
         self.start_message["user_data"] = self.user_data
+        self.start_message["series_unique_id"] = self.series_unique_id
         message = cbor2.dumps(self.start_message)
         self.socket.send(message)
 
@@ -304,6 +322,7 @@ class ZmqStream:
 
         logging.info("Sending end message")
         self.end_message["series_id"] = self.sequence_id
+        self.end_message["series_unique_id"] = self.series_unique_id
         message = cbor2.dumps(self.end_message)
         self.socket.send(message)
 
@@ -461,3 +480,25 @@ class ZmqStream:
             raise ValueError(
                 "Allowed compressions are bslz4 and none only" f"not {value}"
             )
+
+
+ZMQ_ADDRESS = environ.get("ZMQ_ADDRESS", "tcp://*:5555")
+try:
+    HDF5_MASTER_FILE = environ["HDF5_MASTER_FILE"]
+except KeyError:
+    raise KeyError(
+        "No HDF5 master file found. Set the absolute path of the HDF5 master file via the "
+        "HDF5_MASTER_FILE environment variable"
+    )
+
+DELAY_BETWEEN_FRAMES = float(environ.get("DELAY_BETWEEN_FRAMES", "0.1"))
+NUMBER_OF_DATA_FILES = int(environ.get("NUMBER_OF_DATA_FILES", "1"))
+NUMBER_OF_FRAMES_PER_TRIGGER = int(environ.get("NUMBER_OF_FRAMES_PER_TRIGGER", "1"))
+
+zmq_stream = ZmqStream(
+    address=ZMQ_ADDRESS,
+    hdf5_file_path=HDF5_MASTER_FILE,
+    delay_between_frames=DELAY_BETWEEN_FRAMES,
+    number_of_data_files=NUMBER_OF_DATA_FILES,
+    number_of_frames_per_trigger=NUMBER_OF_FRAMES_PER_TRIGGER,
+)

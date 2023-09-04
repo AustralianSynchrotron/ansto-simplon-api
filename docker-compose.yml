@@ -1,14 +1,13 @@
 version: '3.8'
 
 services:
-  mxsimplonapi:
+  mx-simplon-api:
     build: .
-    container_name: mxsimplonapi
+    container_name: mx-simplon-api
     environment:
       ZMQ_ADDRESS: tcp://*:5555
       HDF5_MASTER_FILE: /share_data/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5
       DELAY_BETWEEN_FRAMES: 0.0 # seconds
-      COMPRESSION_TYPE: bslz4 # allowed options are: lz4, bslz4, or no_compression
       NUMBER_OF_DATA_FILES: 1 # 2 seems to be the maximum number of files we can load into memory (16M data)
       NUMBER_OF_FRAMES_PER_TRIGGER: 30 # A number multiple of 200
     ports:
@@ -22,8 +21,8 @@ volumes:
     driver: local
     driver_opts:
       type: cifs
-      device: //10.244.101.66/smd-share
-      o: username=guest,password=guest,vers=2.0,uid=1000,gid=1000
+      device: //12.345.678.90/smd-share
+      o: username=username,password=password,vers=2.0,uid=1000,gid=1000
 
 networks:
   default:
