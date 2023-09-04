@@ -1,4 +1,4 @@
-# MX Sim-Plon API
+# ANSTO Sim-Plon API
 A simulated Dectris Simplon API. Aims to have the same RESTlike interface and produce a ZMQ stream of data from an input Hdf5 file.
 The input HDF5 file is defined by the environment variable `HDF5_MASTER_FILE`, e.g. `HDF5_MASTER_FILE=/path/to/HDF5_masterfile.h5`
 
