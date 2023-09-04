@@ -12,7 +12,7 @@ steps:
       - env | sort
 
   - name: pylint
-    image: python:3.10
+    image: python:3.11
     commands:
       - apt update
       - apt install -y gcc libhdf5-serial-dev
@@ -103,7 +103,7 @@ steps:
       - env | sort
 
   - name: pylint
-    image: python:3.9
+    image: python:3.11
     commands:
       - python -m pip install poetry --user
       - python -m poetry install
