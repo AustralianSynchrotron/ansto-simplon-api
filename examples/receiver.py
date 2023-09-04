@@ -36,7 +36,7 @@ def decompress_image(zmq_image_message: dict) -> npt.NDArray:
     contents: cbor2.CBORTag
     shape, contents = data.value
     dtype = tag_decoders[contents.tag]
-    if type(contents.value) == bytes:
+    if type(contents.value) is bytes:
         # This means the image has not been compressed,
         # e.g. compression=none
         compression_type = None
