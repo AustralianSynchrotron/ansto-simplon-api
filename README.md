@@ -23,6 +23,8 @@ Follow these steps to run the simulated SIMPLON API and ensure its proper functi
    You have two options to install the library:
    - Using Poetry: Run `poetry install`.
    - Using pip: Run `pip install .`.
+  
+     **Note**: Installing `gcc` (and `python3-dev` if using Ubuntu) is required to run the library.
 
 2. **Set the HDF5 File Path**
    
@@ -32,13 +34,12 @@ Follow these steps to run the simulated SIMPLON API and ensure its proper functi
    ```
 
 3. **Run the FAST-API application**
-   
-   Launch the FAST-API application
-   ```bash
+      ```bash
    uvicorn ansto_simplon_api.main:app
    ```
 
 4. **Start the ZMQ Consumer**
+
 Once the simulated SIMPLON API is up and running, you can verify its functionality by running the ZMQ receiver and triggering the detector:
 ```bash
 python examples/receiver.py
