@@ -10,4 +10,3 @@ router = APIRouter(prefix="/ansto_endpoints", tags=["ANSTO Endpoints"])
 async def set_user_data(hdf5_file_path: SimplonRequestStr):
     zmq_stream.hdf5_file_path = hdf5_file_path.value
     return {"value": zmq_stream.hdf5_file_path}
-
