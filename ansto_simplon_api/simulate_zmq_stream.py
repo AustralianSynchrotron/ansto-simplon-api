@@ -60,17 +60,10 @@ class ZmqStream:
         """
 
         self.address = address
-        self.hdf5_file_path = hdf5_file_path
         self.compression = "bslz4"
         self.delay_between_frames = delay_between_frames
         self.number_of_data_files = number_of_data_files
         self.number_of_frames_per_trigger = number_of_frames_per_trigger
-
-        logging.info(f"ZMQ Address: {self.address}")
-        logging.info(f"Hdf5 file path: {self.hdf5_file_path}")
-        logging.info(f"Compression type: {self.compression}")
-        logging.info(f"Delay between frames (s): {self.delay_between_frames}")
-        logging.info(f"Number of data files: {self.number_of_data_files}")
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUSH)
@@ -84,12 +77,14 @@ class ZmqStream:
 
         self.user_data = ""  # an empty string is the real default value
         self.series_unique_id = None
+        self.frames = None
+        self.hdf5_file_path = hdf5_file_path
 
-        logging.info("Loading dataset...")
-        self.frames = self.create_list_of_compressed_frames(
-            self.hdf5_file_path, self.compression
-        )
-        logging.info("Dataset loaded")
+        logging.info(f"ZMQ Address: {self.address}")
+        logging.info(f"Hdf5 file path: {self.hdf5_file_path}")
+        logging.info(f"Compression type: {self.compression}")
+        logging.info(f"Delay between frames (s): {self.delay_between_frames}")
+        logging.info(f"Number of data files: {self.number_of_data_files}")
 
     def create_list_of_compressed_frames(
         self, hdf5_file_path: str, compression: str
@@ -480,6 +475,35 @@ class ZmqStream:
             raise ValueError(
                 "Allowed compressions are bslz4 and none only" f"not {value}"
             )
+
+    @property
+    def hdf5_file_path(self) -> str:
+        """
+        Gets the hdf5_file_path
+
+        Returns
+        -------
+        self._hdf5_file_path : str
+            The hdf5 file name
+        """
+        return self._hdf5_file_path
+
+    @hdf5_file_path.setter
+    def hdf5_file_path(self, value: str) -> None:
+        """
+        Sets the hdf5 file name and loads frames from the HDF5 file into memory
+
+        Parameters
+        ----------
+        value : str
+            The hdf5 filename
+        """
+        logging.info("Loading dataset...")
+        self._hdf5_file_path = value
+        self.frames = self.create_list_of_compressed_frames(
+            self._hdf5_file_path, self.compression
+        )
+        logging.info("Dataset loaded")
 
 
 ZMQ_ADDRESS = environ.get("ZMQ_ADDRESS", "tcp://*:5555")
