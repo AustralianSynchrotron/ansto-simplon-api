@@ -19,15 +19,15 @@ Currently generates a [Stream V2] release compatible ZMQ stream.
 Follow these steps to run the simulated SIMPLON API and ensure its proper functionality:
 
 1. **Install the Library**
-   
+
    You have two options to install the library:
    - Using Poetry: Run `poetry install`.
    - Using pip: Run `pip install .`.
-  
+
      **Note**: Installing `gcc` (and `python3-dev` if using Ubuntu) is required to run the library.
 
 2. **Set the HDF5 File Path**
-   
+
    Before running the API, set the `HDF5_MASTER_FILE` environment variable using the following command:
    ```bash
    export HDF5_MASTER_FILE=/path/to/HDF5_master_file
@@ -46,7 +46,7 @@ python examples/receiver.py
 ```
 
 5. **Arm, trigger and disarm the detector**
-   
+
 Finally run the arm, trigger, and disarm script as follows:
 ```bash
 python examples/trigger_detector.py
