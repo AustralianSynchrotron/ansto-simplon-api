@@ -1,15 +1,11 @@
 from fastapi import APIRouter
 
 from ...schemas.configuration import (
-    DetectorConfiguration,
     SimplonRequestFloat,
     SimplonRequestInt,
     SimplonRequestStr,
 )
-from ...simulate_zmq_stream import zmq_stream
-
-detector_configuration = DetectorConfiguration()
-
+from ...simulate_zmq_stream import detector_configuration, zmq_stream
 
 router = APIRouter(prefix="/detector/api/1.8.0/config", tags=["Detector Configuration"])
 

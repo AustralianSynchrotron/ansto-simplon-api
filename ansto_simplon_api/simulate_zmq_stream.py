@@ -17,12 +17,15 @@ import zmq
 from tqdm import trange
 
 from .parse_master_file import Parse
+from .schemas.configuration import DetectorConfiguration
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s: %(message)s",
     datefmt="%d-%m-%Y %H:%M:%S",
 )
+
+detector_configuration = DetectorConfiguration()
 
 
 class ZmqStream:
@@ -303,6 +306,9 @@ class ZmqStream:
         self.start_message["number_of_images"] = self.number_of_frames_per_trigger
         self.start_message["user_data"] = self.user_data
         self.start_message["series_unique_id"] = self.series_unique_id
+
+        self.start_message["image_size_x"] = detector_configuration.x_pixels_in_detector
+
         message = cbor2.dumps(self.start_message)
         self.socket.send(message)
 
