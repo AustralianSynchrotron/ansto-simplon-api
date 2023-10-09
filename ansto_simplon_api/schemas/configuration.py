@@ -19,5 +19,17 @@ class SimplonRequestStr(BaseModel):
     value: str
 
 
+class ZMQStartMessage(BaseModel):
+    type: str = "start"
+    series_id: int = 0
+    number_of_images: int = 1
+    user_data: dict | None = {}
+    series_unique_id: str = ""
+
+    image_size_x: int = 3108
+
+
 class DetectorConfiguration(BaseModel):
-    x_pixels_in_detector: int = 3108
+    """Any entry that is not sent via ZMQ goes here"""
+
+    detector_readout_time: float = 0.0000001

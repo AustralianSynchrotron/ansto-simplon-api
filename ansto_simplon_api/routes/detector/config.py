@@ -1,13 +1,16 @@
 from fastapi import APIRouter
 
 from ...schemas.configuration import (
+    DetectorConfiguration,
     SimplonRequestFloat,
     SimplonRequestInt,
     SimplonRequestStr,
 )
-from ...simulate_zmq_stream import detector_configuration, zmq_stream
+from ...simulate_zmq_stream import zmq_start_message, zmq_stream
 
 router = APIRouter(prefix="/detector/api/1.8.0/config", tags=["Detector Configuration"])
+
+detector_configuration = DetectorConfiguration()
 
 
 @router.put("/frame_time")
@@ -89,7 +92,13 @@ async def get_detector_type():
 
 @router.get("/detector_readout_time")
 async def get_detector_readout_time():
-    return {"value": 0.0000001}
+    return {"value": detector_configuration.detector_readout_time}
+
+
+@router.put("/detector_readout_time")
+async def put_detector_readout_time(input: SimplonRequestFloat):
+    detector_configuration.detector_readout_time = input.value
+    return {"value": detector_configuration.detector_readout_time}
 
 
 @router.get("/bit_depth_image")
@@ -123,14 +132,14 @@ async def get_trigger_mode():
 
 
 @router.put("/x_pixels_in_detector")
-async def put_x_pixels_in_detector(value: SimplonRequestFloat):
-    detector_configuration.x_pixels_in_detector = value.value
-    return {"value": detector_configuration.x_pixels_in_detector}
+async def put_x_pixels_in_detector(input: SimplonRequestFloat):
+    zmq_start_message.image_size_x = input.value
+    return {"value": zmq_start_message.image_size_x}
 
 
 @router.get("/x_pixels_in_detector")
 async def get_x_pixels_in_detector():
-    return {"value": detector_configuration.x_pixels_in_detector}
+    return {"value": zmq_start_message.image_size_x}
 
 
 @router.get("/y_pixels_in_detector")
