@@ -1,11 +1,15 @@
 from fastapi import APIRouter
 
 from ...schemas.configuration import (
+    DetectorConfiguration,
     SimplonRequestFloat,
     SimplonRequestInt,
     SimplonRequestStr,
 )
 from ...simulate_zmq_stream import zmq_stream
+
+detector_configuration = DetectorConfiguration()
+
 
 router = APIRouter(prefix="/detector/api/1.8.0/config", tags=["Detector Configuration"])
 
@@ -122,9 +126,15 @@ async def get_trigger_mode():
     return {"value": "exts"}
 
 
+@router.put("/x_pixels_in_detector")
+async def put_x_pixels_in_detector(value: SimplonRequestFloat):
+    detector_configuration.x_pixels_in_detector = value.value
+    return {"value": detector_configuration.x_pixels_in_detector}
+
+
 @router.get("/x_pixels_in_detector")
 async def get_x_pixels_in_detector():
-    return {"value": 3108}
+    return {"value": detector_configuration.x_pixels_in_detector}
 
 
 @router.get("/y_pixels_in_detector")

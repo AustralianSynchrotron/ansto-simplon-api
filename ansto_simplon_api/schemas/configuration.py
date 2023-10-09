@@ -17,3 +17,7 @@ class SimplonRequestAny(BaseModel):
 
 class SimplonRequestStr(BaseModel):
     value: str
+
+
+class DetectorConfiguration(BaseModel):
+    x_pixels_in_detector: int = 3108
