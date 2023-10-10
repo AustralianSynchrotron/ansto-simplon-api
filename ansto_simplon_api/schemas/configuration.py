@@ -30,29 +30,31 @@ class ZMQStartMessage(BaseModel):
     Default values matches pre-operations
     test dataset. To be updated when we collect
     new datasets to be used as standards.
+
+    TODO: Map from channel name to energy, flatfield, mask, etc
     """
 
     type: str = "start"
     arm_date: datetime = datetime.now()
     beam_center_x: float = 2099.46240234375
     beam_center_y: float = 2119.423828125
-    channels: list[str] = ["1"]
+    channels: list[str] = ["0"]
     count_time: float = 0.010999999940395355
     countrate_correction_enabled: bool = True
     countrate_correction_lookup_table: list | None
     detector_description: str = "Dectris EIGER2 Si 16M"
     detector_serial_number: str = "E-32-0130"
-    detector_translation: list[float, float, float]
-    flatfield: list | None
+    detector_translation: tuple[float, float, float]
+    flatfield: list | None = []
     flatfield_enabled: bool = True
     frame_time: float = 0.011003094725310802
     goniometer: dict = {"omega": {"increment": float, "start": float}}
-    image_dtype: str
+    image_dtype: str = "uint32"
     image_size_x: int = 4150
     image_size_y: int = 4371
     incident_energy: float = 0.9762535309700807
     number_of_images: int = 1
-    pixel_mask: list | None
+    pixel_mask: list | None = []
     pixel_mask_enabled: bool
     pixel_size_x: float = 7.5e-05
     pixel_size_y: float = 7.5e-05
@@ -60,8 +62,8 @@ class ZMQStartMessage(BaseModel):
     sensor_material: str = "Si"
     sensor_thickness: float = 4.5e-04
     series_id: int = 0
-    series_unique_id: str
-    threshold_energy: float
+    series_unique_id: str = 0
+    threshold_energy: float = 13000.0
     user_data: dict | None = {}
     virtual_pixel_interpolation_enabled: bool = True
 
