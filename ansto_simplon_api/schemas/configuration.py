@@ -36,34 +36,34 @@ class ZMQStartMessage(BaseModel):
 
     type: str = "start"
     arm_date: datetime = datetime.now()
-    beam_center_x: float = 2099.46240234375
-    beam_center_y: float = 2119.423828125
+    beam_center_x: float = 2099.46
+    beam_center_y: float = 2119.42
     channels: list[str] = ["0"]
-    count_time: float = 0.010999999940395355
+    count_time: float = 0.0109
     countrate_correction_enabled: bool = True
-    countrate_correction_lookup_table: list | None
+    countrate_correction_lookup_table: list | None = [0]
     detector_description: str = "Dectris EIGER2 Si 16M"
     detector_serial_number: str = "E-32-0130"
-    detector_translation: tuple[float, float, float]
+    detector_translation: tuple[float, float, float] = [0, 0, 0.298]
     flatfield: list | None = []
     flatfield_enabled: bool = True
-    frame_time: float = 0.011003094725310802
+    frame_time: float = 0.0110
     goniometer: dict = {"omega": {"increment": float, "start": float}}
     image_dtype: str = "uint32"
     image_size_x: int = 4150
     image_size_y: int = 4371
-    incident_energy: float = 0.9762535309700807
+    incident_energy: float = 0.9763
     number_of_images: int = 1
     pixel_mask: list | None = []
-    pixel_mask_enabled: bool
+    pixel_mask_enabled: bool = True
     pixel_size_x: float = 7.5e-05
     pixel_size_y: float = 7.5e-05
-    saturation_value: int | None
+    saturation_value: int | None = 0
     sensor_material: str = "Si"
     sensor_thickness: float = 4.5e-04
     series_id: int = 0
     series_unique_id: str = 0
-    threshold_energy: float = 13000.0
+    threshold_energy: float = 13000
     user_data: dict | None = {}
     virtual_pixel_interpolation_enabled: bool = True
 
