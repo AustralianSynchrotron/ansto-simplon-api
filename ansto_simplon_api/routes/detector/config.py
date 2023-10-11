@@ -128,7 +128,7 @@ async def get_detector_distance():
 
 @router.put("/detector_distance")
 async def put_detector_distance(
-    input: list[
+    input: tuple[
         SimplonRequestFloat,
         SimplonRequestFloat,
         SimplonRequestFloat,
