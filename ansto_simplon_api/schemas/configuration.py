@@ -78,5 +78,5 @@ class DetectorConfiguration(BaseModel):
     detector_compression: str = "bslz4"
     detector_countrate_correction_cutoff: int = 126634
     detector_ntrigger: int = 1
-    detector_number_of_excluded_pixels: int
+    detector_number_of_excluded_pixels: int = 1251206
     detector_trigger_mode: str = "exts"
