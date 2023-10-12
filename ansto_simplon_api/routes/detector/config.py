@@ -177,8 +177,8 @@ async def get_frame_count_time():
     return {"value": 0.004170816650000}
 
 
-@router.set("/frame_time")
-async def set_frame_time():
+@router.get("/frame_time")
+async def get_frame_time():
     return {"value": zmq_start_message.frame_time}
 
 
