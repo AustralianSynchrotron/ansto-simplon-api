@@ -2,11 +2,12 @@ from fastapi import APIRouter
 
 from ...schemas.configuration import (
     DetectorConfiguration,
+    SimplonRequestAny,
+    SimplonRequestBool,
+    SimplonRequestDict,
     SimplonRequestFloat,
     SimplonRequestInt,
     SimplonRequestStr,
-    SimplonRequestBool,
-    SimplonRequestAny,
 )
 from ...simulate_zmq_stream import zmq_start_message, zmq_stream
 
@@ -46,14 +47,15 @@ async def put_beam_center_y(input: SimplonRequestFloat):
 
 
 @router.put("/bit_depth_image")
-async def put_bit_depth_image(input: SimplonRequestStr):
-    zmq_start_message.image_dtype = input.value
-    return {"value": zmq_start_message.image_dtype}
+async def put_bit_depth_image(input: SimplonRequestInt):
+    detector_configuration.detector_bit_depth_image = input.value
+    # the bit depth image is not the dtype
+    return {"value": detector_configuration.detector_bit_depth_image}
 
 
 @router.get("/bit_depth_image")
 async def get_bit_depth_image():
-    return {"value": zmq_start_message.image_dtype}
+    return {"value": detector_configuration.detector_bit_depth_image}
 
 
 # @router.put("/bit_depth_readout")
@@ -128,13 +130,10 @@ async def get_detector_distance():
 
 @router.put("/detector_distance")
 async def put_detector_distance(
-    input: tuple[
-        SimplonRequestFloat,
-        SimplonRequestFloat,
-        SimplonRequestFloat,
-    ]
+    input: SimplonRequestFloat,
 ):
-    zmq_start_message.detector_translation = input.value
+    detector_translation = (0, 0, input.value)
+    zmq_start_message.detector_translation = detector_translation
     return {"value": zmq_start_message.detector_translation}
 
 
@@ -277,7 +276,7 @@ async def get_threshold_energy():
 
 
 @router.put("/threshold_energy")
-async def put_threshold_energy(input: SimplonRequestFloat):
+async def put_threshold_energy(input: SimplonRequestDict):
     zmq_start_message.threshold_energy = input.value
     return {"value": zmq_start_message.threshold_energy}
 

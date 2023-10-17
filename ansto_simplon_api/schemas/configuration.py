@@ -1,8 +1,7 @@
+from datetime import datetime, timezone
 from typing import Any
 
 from pydantic import BaseModel
-
-from datetime import datetime
 
 
 class SimplonRequestInt(BaseModel):
@@ -25,6 +24,10 @@ class SimplonRequestBool(BaseModel):
     value: bool
 
 
+class SimplonRequestDict(BaseModel):
+    value: dict
+
+
 class ZMQStartMessage(BaseModel):
     """
     Default values matches pre-operations
@@ -35,7 +38,7 @@ class ZMQStartMessage(BaseModel):
     """
 
     type: str = "start"
-    arm_date: datetime = datetime.now()
+    arm_date: datetime = datetime.now(tz=timezone.utc)
     beam_center_x: float = 2099.46
     beam_center_y: float = 2119.42
     channels: list[str] = ["0"]
@@ -48,11 +51,12 @@ class ZMQStartMessage(BaseModel):
     flatfield: list | None = []
     flatfield_enabled: bool = True
     frame_time: float = 0.0110
-    goniometer: dict = {"omega": {"increment": float, "start": float}}
+    goniometer: dict = {"omega": {"increment": 0.1, "start": 360}}
     image_dtype: str = "uint32"
     image_size_x: int = 4150
     image_size_y: int = 4371
-    incident_energy: float = 0.9763
+    incident_energy: float = 12700
+    incident_wavelength: float = 0.9763
     number_of_images: int = 1
     pixel_mask: list | None = []
     pixel_mask_enabled: bool = True
@@ -63,7 +67,7 @@ class ZMQStartMessage(BaseModel):
     sensor_thickness: float = 4.5e-04
     series_id: int = 0
     series_unique_id: str = 0
-    threshold_energy: float = 13000
+    threshold_energy: dict = {"threshold_1": 6350}
     user_data: dict | None = {}
     virtual_pixel_interpolation_enabled: bool = True
 
