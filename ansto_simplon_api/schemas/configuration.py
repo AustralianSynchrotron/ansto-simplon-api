@@ -47,7 +47,7 @@ class ZMQStartMessage(BaseModel):
     countrate_correction_lookup_table: list | None = [0]
     detector_description: str = "Dectris EIGER2 Si 16M"
     detector_serial_number: str = "E-32-0130"
-    detector_translation: tuple[float, float, float] = [0, 0, 0.298]
+    detector_translation: tuple[float, float, float] = [0, 0, -0.298]
     flatfield: list | None = []
     flatfield_enabled: bool = True
     frame_time: float = 0.0110
