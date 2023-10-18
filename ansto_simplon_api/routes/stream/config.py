@@ -15,3 +15,9 @@ async def set_user_data(user_data: SimplonRequestAny):
 @router.get("/header_appendix")
 async def get_user_data():
     return {"value": zmq_stream.user_data}
+
+
+### Stream subsystem config
+# header_detail
+# image_appendix
+# mode

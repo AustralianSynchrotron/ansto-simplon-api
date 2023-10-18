@@ -17,12 +17,15 @@ import zmq
 from tqdm import trange
 
 from .parse_master_file import Parse
+from .schemas.configuration import ZMQStartMessage
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s: %(message)s",
     datefmt="%d-%m-%Y %H:%M:%S",
 )
+
+zmq_start_message = ZMQStartMessage()
 
 
 class ZmqStream:
@@ -299,11 +302,12 @@ class ZmqStream:
         self.series_unique_id = str(uuid.uuid4())
 
         logging.info("Sending start message")
-        self.start_message["series_id"] = self.sequence_id
-        self.start_message["number_of_images"] = self.number_of_frames_per_trigger
-        self.start_message["user_data"] = self.user_data
-        self.start_message["series_unique_id"] = self.series_unique_id
-        message = cbor2.dumps(self.start_message)
+        zmq_start_message.series_id = self.sequence_id
+        zmq_start_message.number_of_images = self.number_of_frames_per_trigger
+        zmq_start_message.user_data = self.user_data
+        zmq_start_message.series_unique_id = self.series_unique_id
+
+        message = cbor2.dumps(zmq_start_message.model_dump())
         self.socket.send(message)
 
     def stream_end_message(self) -> None:
