@@ -21,10 +21,15 @@ Follow these steps to run the simulated SIMPLON API and ensure its proper functi
 1. **Install the Library**
 
    You have two options to install the library:
-   - Using Poetry: Run `poetry install`.
+   - Using Poetry (Recommended): Run `poetry install`.
    - Using pip: Run `pip install .`.
 
-     **Note**: Installing `gcc` (and `python3-dev` if using Ubuntu) is required to run the library.
+     **Note**: For Ubuntu users, additionally install the following packages
+     ```bash
+      apt update
+      apt-get install -y gcc libhdf5-serial-dev
+     ```
+     For other operating systems, Install the equivalent libraries for `gcc` and `libhdf5-serial-dev`.
 
 2. **Set the HDF5 File Path**
 
