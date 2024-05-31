@@ -53,8 +53,8 @@ class ZMQStartMessage(BaseModel):
     frame_time: float = 0.0110
     goniometer: dict = {"omega": {"increment": 0.1, "start": 360}}
     image_dtype: str = "uint32"
-    image_size_x: int = 4150
-    image_size_y: int = 4371
+    image_size_x: int = 2070
+    image_size_y: int = 2167
     incident_energy: float = 12700
     incident_wavelength: float = 0.9763
     number_of_images: int = 1

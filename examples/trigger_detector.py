@@ -11,7 +11,7 @@ print(f"{'-' * 20} Add user data {'-' * 20}")
 user_data = {
     "value": {
         "id": "my_sample",
-        "grid_scan_type": "flat",
+        "grid_scan_id": "flat",
         "zmq_consumer_mode": "spotfinder",
         "number_of_columns": 5,
         "number_of_rows": 6,

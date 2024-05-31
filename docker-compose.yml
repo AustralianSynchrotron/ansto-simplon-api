@@ -6,27 +6,12 @@ services:
     container_name: mx-simplon-api
     environment:
       ZMQ_ADDRESS: tcp://*:5555
-      HDF5_MASTER_FILE: /share_data/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5
+      #To access the masterfile, you can either copy it to the container by modifying
+      # the dockerfile, or you can mount a volume containing the masterfile.
+      HDF5_MASTER_FILE: /path/to/HDF5_master_file
       DELAY_BETWEEN_FRAMES: 0.0 # seconds
       NUMBER_OF_DATA_FILES: 1 # 2 seems to be the maximum number of files we can load into memory (16M data)
-      NUMBER_OF_FRAMES_PER_TRIGGER: 30 # A number multiple of 200
+      NUMBER_OF_FRAMES_PER_TRIGGER: 30
     ports:
       - "8000:8000"
       - "5555:5555"
-    volumes:
-      - simplon_share_data:/share_data
-
-volumes:
-  simplon_share_data:
-    driver: local
-    driver_opts:
-      type: cifs
-      device: //12.345.678.90/smd-share
-      o: username=username,password=password,vers=2.0,uid=1000,gid=1000
-
-networks:
-  default:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.16.57.0/24
