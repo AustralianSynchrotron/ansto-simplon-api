@@ -39,8 +39,8 @@ class ZMQStartMessage(BaseModel):
 
     type: str = "start"
     arm_date: datetime = datetime.now(tz=timezone.utc)
-    beam_center_x: float = 2099.46
-    beam_center_y: float = 2119.42
+    beam_center_x: float = 1056
+    beam_center_y: float = 1134
     channels: list[str] = ["0"]
     count_time: float = 0.0109
     countrate_correction_enabled: bool = True
