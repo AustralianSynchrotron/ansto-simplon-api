@@ -9,7 +9,7 @@ router = APIRouter(prefix="/ansto_endpoints", tags=["ANSTO Endpoints"])
 
 
 @router.put("/hdf5_master_file")
-async def set_user_data(hdf5_model: LoadHDF5File):
+async def set_master_file(hdf5_model: LoadHDF5File):
     try:
         zmq_stream.create_list_of_compressed_frames(
             hdf5_file_path=hdf5_model.hdf5_file_path,
@@ -32,5 +32,9 @@ async def set_user_data(hdf5_model: LoadHDF5File):
 
 
 @router.get("/hdf5_master_file")
-async def get_user_data():
-    return {"value": zmq_stream.hdf5_file_path}
+async def get_master_file() -> LoadHDF5File:
+    return LoadHDF5File(
+        hdf5_file_path=zmq_stream.hdf5_file_path,
+        number_of_datafiles=zmq_stream.number_of_data_files,
+        compression=zmq_stream.compression,
+    )
