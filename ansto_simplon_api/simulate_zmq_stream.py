@@ -5,7 +5,6 @@ import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
 from os import environ
-from typing import Any
 
 import bitshuffle
 import cbor2
@@ -72,7 +71,8 @@ class ZmqStream:
         self.socket = self.context.socket(zmq.PUSH)
         self.socket.bind(self.address)
 
-        self._sequence_id = 0
+        self.frames = None
+        self.sequence_id = 0
 
         self.frame_id = 0
 
@@ -82,6 +82,9 @@ class ZmqStream:
         self.series_unique_id = None
         self.frames = None
         self.hdf5_file_path = hdf5_file_path
+        self.create_list_of_compressed_frames(
+            self.hdf5_file_path, self.compression, self.number_of_data_files
+        )
 
         logging.info(f"ZMQ Address: {self.address}")
         logging.info(f"Hdf5 file path: {self.hdf5_file_path}")
@@ -90,7 +93,10 @@ class ZmqStream:
         logging.info(f"Number of data files: {self.number_of_data_files}")
 
     def create_list_of_compressed_frames(
-        self, hdf5_file_path: str, compression: str
+        self,
+        hdf5_file_path: str,
+        compression: str,
+        number_of_datafiles: int | None = None,
     ) -> list[dict]:
         """
         Creates a list of compressed frames from a hdf5 file
@@ -102,6 +108,9 @@ class ZmqStream:
         compression : str
             Compression type. Accepted compression types are lz4 and bslz4.
             Default value is bslz4
+        number_of_datafiles: int | None = None
+            The number of datafiles loaded in memory. If number_of_datafiles=None,
+            we load all datafiles specified in the master file
 
         Raises
         ------
@@ -114,24 +123,26 @@ class ZmqStream:
             A list containing a dictionary of compressed frames, and
             frame metadata
         """
+        self.hdf5_file_path = hdf5_file_path
+        self.compression = compression
+        self.number_of_data_files = number_of_datafiles
 
-        hdf5_file = h5py.File(hdf5_file_path)
-        keys = list(hdf5_file["entry"]["data"].keys())
+        with h5py.File(hdf5_file_path) as hdf5_file:
+            keys = list(hdf5_file["entry"]["data"].keys())
 
-        datafile_list: list[npt.NDArray] = [
-            np.array(hdf5_file["entry"]["data"][keys[i]])
-            for i in range(self.number_of_data_files)
-        ]
+            if number_of_datafiles is None:
+                self.number_of_data_files = len(keys)
 
-        # Would make more sense in the __init__ section
-        # but then we'd need to read the file twice
-        self.start_message, self.image_message, self.end_message = Parse(
-            hdf5_file
-        ).header()
+            datafile_list: list[npt.NDArray] = [
+                np.array(hdf5_file["entry"]["data"][keys[i]])
+                for i in range(self.number_of_data_files)
+            ]
 
-        # Delete the hdf5_file, we got what we needed
-        hdf5_file.close()
-        del hdf5_file
+            # Would make more sense in the __init__ section
+            # but then we'd need to read the file twice
+            self.start_message, self.image_message, self.end_message = Parse(
+                hdf5_file
+            ).header()
 
         number_of_frames_per_data_file = [
             datafile.shape[0] for datafile in datafile_list
@@ -175,7 +186,7 @@ class ZmqStream:
 
         logging.info(f"Number of unique frames: {len(frame_list)}")
         del datafile_list
-        return frame_list
+        self.frames = frame_list
 
     def create_image_cbor_object(
         self,
@@ -337,177 +348,6 @@ class ZmqStream:
         self.stream_start_message()
         self.stream_frames(self.frames)
         self.stream_end_message()
-
-    @property
-    def sequence_id(self) -> int:
-        """
-        Gets the sequence_id
-
-        Returns
-        -------
-        self._sequence_id: int
-            The sequence_id
-        """
-        return self._sequence_id
-
-    @sequence_id.setter
-    def sequence_id(self, value: int) -> None:
-        """
-        Sets the sequence_id
-
-        Returns
-        -------
-        None
-        """
-        self._sequence_id = value
-
-    @property
-    def image_number(self) -> int:
-        """
-        Gets the image_number
-
-        Returns
-        -------
-        self._image_number: int
-            The image_number
-        """
-        return self._image_number
-
-    @image_number.setter
-    def image_number(self, value: int) -> None:
-        """
-        Sets the image_number
-
-        Returns
-        -------
-        None
-        """
-        self._image_number = value
-
-    @property
-    def number_of_frames_per_trigger(self) -> None:
-        """
-        Sets the number of frames per trigger
-
-        Returns
-        -------
-        None
-        """
-        return self._number_of_frames_per_trigger
-
-    @number_of_frames_per_trigger.setter
-    def number_of_frames_per_trigger(self, value: int) -> None:
-        """
-        Sets the image_number
-
-        Parameters
-        ----------
-        value : int
-            The number of frames per trigger
-
-        Returns
-        -------
-        None
-        """
-        self._number_of_frames_per_trigger = value
-        logging.info(f"nimages set to: {value}")
-
-    @property
-    def user_data(self) -> Any:
-        """
-        Gets the user data
-
-        Returns
-        -------
-        self._user_data : Any
-            The user data
-        """
-        return self._user_data
-
-    @user_data.setter
-    def user_data(self, value: Any) -> None:
-        """
-        Sets the user data
-
-        Parameters
-        ----------
-        value : Any
-            New value
-
-        Returns
-        -------
-        None
-        """
-        self._user_data = value
-
-    @property
-    def compression(self) -> str:
-        """
-        Gets the compression type
-
-        Returns
-        -------
-        self._user_data : Any
-            The user data
-        """
-        return self._compression
-
-    @compression.setter
-    def compression(self, value: str) -> None:
-        """
-        Sets the compression type
-
-        Parameters
-        ----------
-        value : str
-            New value
-
-        Returns
-        -------
-        None
-        """
-        allowed_compressions = ["bslz4", "none"]
-        if value.lower() in allowed_compressions:
-            self._compression = value
-            try:
-                self.frames = self.create_list_of_compressed_frames(
-                    self.hdf5_file_path, self.compression
-                )
-            except AttributeError:
-                pass
-        else:
-            raise ValueError(
-                "Allowed compressions are bslz4 and none only" f"not {value}"
-            )
-
-    @property
-    def hdf5_file_path(self) -> str:
-        """
-        Gets the hdf5_file_path
-
-        Returns
-        -------
-        self._hdf5_file_path : str
-            The hdf5 file name
-        """
-        return self._hdf5_file_path
-
-    @hdf5_file_path.setter
-    def hdf5_file_path(self, value: str) -> None:
-        """
-        Sets the hdf5 file name and loads frames from the HDF5 file into memory
-
-        Parameters
-        ----------
-        value : str
-            The hdf5 filename
-        """
-        logging.info("Loading dataset...")
-        self._hdf5_file_path = value
-        self.frames = self.create_list_of_compressed_frames(
-            self._hdf5_file_path, self.compression
-        )
-        logging.info("Dataset loaded")
 
 
 ZMQ_ADDRESS = environ.get("ZMQ_ADDRESS", "tcp://*:5555")
