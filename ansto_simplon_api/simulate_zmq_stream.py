@@ -149,8 +149,8 @@ class ZmqStream:
         ]
         array_shape = datafile_list[0].shape[1:]
 
-        zmq_start_message.image_size_x = array_shape[0]
-        zmq_start_message.image_size_y = array_shape[1]
+        zmq_start_message.image_size_x = array_shape[1]
+        zmq_start_message.image_size_y = array_shape[0]
 
         dtype = datafile_list[0].dtype
 
