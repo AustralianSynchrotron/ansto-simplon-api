@@ -93,7 +93,7 @@ class Parse:
         """
         start_message = {
             "type": "start",
-            "arm_date": self.parse("data_collection_date"),
+            # arm_date is set when we arm the detector in real time
             "beam_center_x": self.parse("beam_center_x"),
             "beam_center_y": self.parse("beam_center_y"),
             "channels": ["1"],
@@ -127,7 +127,14 @@ class Parse:
             "image_size_y": self.parse("y_pixels_in_detector"),
             "incident_energy": self.parse("photon_energy"),
             "incident_wavelength": self.parse("incident_wavelength"),
-            "number_of_images": None,  # self.parse("nimages"),
+            "number_of_images": int(
+                np.array(
+                    self.hf["/entry/instrument/detector/detectorSpecific/ntrigger"]
+                )
+            )
+            * int(
+                np.array(self.hf["/entry/instrument/detector/detectorSpecific/nimages"])
+            ),
             "pixel_mask": None,
             "pixel_mask_enabled": bool(self.parse("pixel_mask_applied")),
             "pixel_size_x": self.parse("x_pixel_size"),
@@ -142,7 +149,7 @@ class Parse:
                 "threshold_2": self.parse("threshold_energy") * 3,
             },
             "user_data": {"pi": float(np.pi)},
-            "virtual_pixel_correction_applied": bool(
+            "virtual_pixel_interpolation_enabled": bool(
                 self.parse("virtual_pixel_correction_applied")
             ),
         }

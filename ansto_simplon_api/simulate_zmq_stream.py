@@ -92,6 +92,18 @@ class ZmqStream:
         logging.info(f"Delay between frames (s): {self.delay_between_frames}")
         logging.info(f"Number of data files: {self.number_of_data_files}")
 
+    def _update_zmq_start_message(self) -> None:
+        """
+        Updates the ZMQ start message with values derived from the master file
+        loaded into the Simplon API.
+
+        Returns
+        -------
+        None
+        """
+        for key, val in self.start_message.items():
+            setattr(zmq_start_message, key, val)
+
     def create_list_of_compressed_frames(
         self,
         hdf5_file_path: str,
@@ -143,6 +155,7 @@ class ZmqStream:
             self.start_message, self.image_message, self.end_message = Parse(
                 hdf5_file
             ).header()
+            self._update_zmq_start_message()
 
         number_of_frames_per_data_file = [
             datafile.shape[0] for datafile in datafile_list

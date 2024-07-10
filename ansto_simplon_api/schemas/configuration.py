@@ -47,7 +47,7 @@ class ZMQStartMessage(BaseModel):
     countrate_correction_lookup_table: list | None = [0]
     detector_description: str = "Dectris EIGER2 Si 16M"
     detector_serial_number: str = "E-32-0130"
-    detector_translation: tuple[float, float, float] = [0, 0, -0.298]
+    detector_translation: tuple[float, float, float] | list = [0, 0, -0.298]
     flatfield: list | None = []
     flatfield_enabled: bool = True
     frame_time: float = 0.0110
@@ -65,8 +65,8 @@ class ZMQStartMessage(BaseModel):
     saturation_value: int | None = 33000  # TODO: check where this value comes from
     sensor_material: str = "Si"
     sensor_thickness: float = 4.5e-04
-    series_id: int = 0
-    series_unique_id: str = 0
+    series_id: int | None = 0
+    series_unique_id: str | None = 0
     threshold_energy: dict = {"threshold_1": 6350}
     user_data: dict | None = {}
     virtual_pixel_interpolation_enabled: bool = True
