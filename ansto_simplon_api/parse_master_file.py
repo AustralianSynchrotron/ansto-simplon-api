@@ -1,5 +1,13 @@
+import logging
+
 import h5py
 import numpy as np
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+    datefmt="%d-%m-%Y %H:%M:%S",
+)
 
 
 class Parse:
@@ -91,6 +99,16 @@ class Parse:
             message structure.
 
         """
+        try:
+            saturation_value = int(
+                np.array(self.hf["/entry/instrument/detector/saturation_value"])
+            )
+        except KeyError:
+            logging.warning(
+                "/entry/instrument/detector/saturation_value was not found in the master file. "
+                "Setting saturation value to 33000"
+            )
+            saturation_value = 33000
         start_message = {
             "type": "start",
             # arm_date is set when we arm the detector in real time
@@ -139,7 +157,7 @@ class Parse:
             "pixel_mask_enabled": bool(self.parse("pixel_mask_applied")),
             "pixel_size_x": self.parse("x_pixel_size"),
             "pixel_size_y": self.parse("y_pixel_size"),
-            "saturation_value": self.parse("saturation_value"),
+            "saturation_value": saturation_value,
             "sensor_material": self.parse("sensor_material"),
             "sensor_thickness": self.parse("sensor_thickness"),
             "series_id": None,  # int
