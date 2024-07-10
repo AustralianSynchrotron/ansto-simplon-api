@@ -62,7 +62,7 @@ class ZMQStartMessage(BaseModel):
     pixel_mask_enabled: bool = True
     pixel_size_x: float = 7.5e-05
     pixel_size_y: float = 7.5e-05
-    saturation_value: int | None = 0
+    saturation_value: int | None = 33000  # TODO: check where this value comes from
     sensor_material: str = "Si"
     sensor_thickness: float = 4.5e-04
     series_id: int = 0
