@@ -10,9 +10,10 @@ Currently generates a [Stream V2] release compatible ZMQ stream.
 
    To run the simulated Simplon API, you need to specify the path of an HDF5 master file using the `HDF5_MASTER_FILE` environment variable. You can also configure other parameters using the following environment variables:
 
-   - `DELAY_BETWEEN_FRAMES`: Specifies the delay between frames in seconds (default: 0.1 s).
-   - `NUMBER_OF_DATA_FILES`: Sets the number of data files from the master file loaded into memory (default: 1). Note that the datafiles are stored in memory, so they should not be too large.
-   - `NUMBER_OF_FRAMES_PER_TRIGGER`: Controls the number of frames per trigger. By default, it's set to 30, but you can modify it using the `/detector/api/1.8.0/config/nimages` endpoint.
+   - `DELAY_BETWEEN_FRAMES`: Specifies the delay between frames in seconds (default: 0.1 s). This number can be modified via the `/ansto_endpoints/delay_between_frames` endpoint.
+   - `NUMBER_OF_DATA_FILES`: Sets the number of data files from the master file loaded into memory (default: 1). The number of datafiles can be additionally modified when loading a new master file using the
+   `/ansto_endpoints/hdf5_master_file` endpoint.
+   - The number of frames per trigger is set automatically to the number of frames in the master file. This can be modified by using the `/detector/api/1.8.0/config/nimages` endpoint.
 
 ## Running the simulated SIMPLON API
 

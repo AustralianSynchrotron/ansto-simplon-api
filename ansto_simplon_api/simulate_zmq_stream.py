@@ -40,7 +40,6 @@ class ZmqStream:
         hdf5_file_path: str,
         delay_between_frames: float = 0.1,
         number_of_data_files: int = 1,
-        number_of_frames_per_trigger: int = 200,
     ) -> None:
         """
         Parameters
@@ -53,8 +52,6 @@ class ZmqStream:
             Time delay between images sent via the ZeroMQ stream [seconds]
         number_of_data_files : int, optional
             Number of data files loaded in memory
-        number_of_frames_per_trigger : int, optional
-            Number of frames per trigger
 
         Returns
         -------
@@ -65,7 +62,7 @@ class ZmqStream:
         self.compression = "bslz4"
         self.delay_between_frames = delay_between_frames
         self.number_of_data_files = number_of_data_files
-        self.number_of_frames_per_trigger = number_of_frames_per_trigger
+        self.number_of_frames_per_trigger = None
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUSH)
@@ -156,6 +153,8 @@ class ZmqStream:
                 hdf5_file
             ).header()
             self._update_zmq_start_message()
+
+        self.number_of_frames_per_trigger = zmq_start_message.number_of_images
 
         number_of_frames_per_data_file = [
             datafile.shape[0] for datafile in datafile_list
@@ -378,12 +377,10 @@ except KeyError:
 
 DELAY_BETWEEN_FRAMES = float(environ.get("DELAY_BETWEEN_FRAMES", "0.1"))
 NUMBER_OF_DATA_FILES = int(environ.get("NUMBER_OF_DATA_FILES", "1"))
-NUMBER_OF_FRAMES_PER_TRIGGER = int(environ.get("NUMBER_OF_FRAMES_PER_TRIGGER", "1"))
 
 zmq_stream = ZmqStream(
     address=ZMQ_ADDRESS,
     hdf5_file_path=HDF5_MASTER_FILE,
     delay_between_frames=DELAY_BETWEEN_FRAMES,
     number_of_data_files=NUMBER_OF_DATA_FILES,
-    number_of_frames_per_trigger=NUMBER_OF_FRAMES_PER_TRIGGER,
 )
