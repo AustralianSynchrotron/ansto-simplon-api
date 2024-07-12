@@ -165,6 +165,7 @@ class ZmqStream:
         zmq_start_message.image_size_y = array_shape[0]
 
         dtype = datafile_list[0].dtype
+        zmq_start_message.image_dtype = str(dtype)
 
         frame_list = []
 

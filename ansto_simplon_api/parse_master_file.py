@@ -123,9 +123,7 @@ class Parse:
             "detector_description": self.parse("description"),
             "detector_serial_number": self.parse("detector_number"),
             "detector_translation": list(
-                np.array(
-                    self.hf["/entry/instrument/detector/geometry/translation/distances"]
-                )
+                self.hf["/entry/instrument/detector/geometry/translation/distances"]
             ),
             "flatfield": None,
             "flatfield_enabled": bool(self.parse("flatfield_correction_applied")),
