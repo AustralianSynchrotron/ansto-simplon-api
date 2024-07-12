@@ -118,21 +118,25 @@ class ZmqStream:
         None
         """
         try:
-            self.detector_config.detector_readout_time = hf[
-                "/entry/instrument/detector/detector_readout_time"
-            ]
-            self.detector_config.detector_bit_depth_image = hf[
-                "/entry/instrument/detector/bit_depth_image"
-            ]
-            self.detector_config.detector_bit_depth_readout = hf[
-                "/entry/instrument/detector/bit_depth_readout"
-            ]
-            self.detector_config.detector_compression = hf[
-                "/entry/instrument/detector/detectorSpecific/compression"
-            ]
-            self.detector_config.detector_countrate_correction_cutoff = hf[
-                "/entry/instrument/detector/detectorSpecific/countrate_correction_count_cutoff"
-            ]
+            self.detector_config.detector_readout_time = float(
+                hf["/entry/instrument/detector/detector_readout_time"][()]
+            )
+            self.detector_config.detector_bit_depth_image = int(
+                hf["/entry/instrument/detector/bit_depth_image"][()]
+            )
+            self.detector_config.detector_bit_depth_readout = int(
+                hf["/entry/instrument/detector/bit_depth_readout"][()]
+            )
+            self.detector_config.detector_compression = str(
+                hf["/entry/instrument/detector/detectorSpecific/compression"][
+                    ()
+                ].decode()
+            )
+            self.detector_config.detector_countrate_correction_cutoff = int(
+                hf[
+                    "/entry/instrument/detector/detectorSpecific/countrate_correction_count_cutoff"  # noqa
+                ][()]
+            )
         except KeyError:
             logging.warning(
                 "Detector configuration could not be loaded. Using detector "
