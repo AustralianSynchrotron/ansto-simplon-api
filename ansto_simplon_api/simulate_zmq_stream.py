@@ -106,7 +106,7 @@ class ZmqStream:
     def _update_detector_configuration(self, hf: h5py.File) -> None:
         """
         Updates the detector configuration by reading the detector
-        condig from a hdf5 file
+        config from a hdf5 file
 
         Parameters
         ----------
