@@ -101,7 +101,9 @@ class Parse:
         """
         try:
             saturation_value = int(
-                np.array(self.hf["/entry/instrument/detector/saturation_value"])
+                np.array(
+                    self.hf["/entry/instrument/detector/saturation_value"]
+                ).tolist()
             )
         except KeyError:
             logging.warning(
@@ -122,9 +124,9 @@ class Parse:
             "countrate_correction_lookup_table": None,
             "detector_description": self.parse("description"),
             "detector_serial_number": self.parse("detector_number"),
-            "detector_translation": list(
+            "detector_translation": np.array(
                 self.hf["/entry/instrument/detector/geometry/translation/distances"]
-            ),
+            ).tolist(),
             "flatfield": None,
             "flatfield_enabled": bool(self.parse("flatfield_correction_applied")),
             "frame_time": self.parse("frame_time"),
@@ -146,10 +148,12 @@ class Parse:
             "number_of_images": int(
                 np.array(
                     self.hf["/entry/instrument/detector/detectorSpecific/ntrigger"]
-                )
+                ).tolist()
             )
             * int(
-                np.array(self.hf["/entry/instrument/detector/detectorSpecific/nimages"])
+                np.array(
+                    self.hf["/entry/instrument/detector/detectorSpecific/nimages"]
+                ).tolist()
             ),
             "pixel_mask": None,
             "pixel_mask_enabled": bool(self.parse("pixel_mask_applied")),
