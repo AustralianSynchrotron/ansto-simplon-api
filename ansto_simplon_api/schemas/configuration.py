@@ -78,7 +78,6 @@ class DetectorConfiguration(BaseModel):
     detector_readout_time: float = 0.0000001
     detector_bit_depth_image: int = 32
     detector_bit_depth_readout: int = 16
-    detector_readout_time: float = 1e-07
     detector_compression: str = "bslz4"
     detector_countrate_correction_cutoff: int = 126634
     detector_ntrigger: int = 1

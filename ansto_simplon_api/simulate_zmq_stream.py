@@ -16,7 +16,7 @@ import zmq
 from tqdm import trange
 
 from .parse_master_file import Parse
-from .schemas.configuration import ZMQStartMessage
+from .schemas.configuration import DetectorConfiguration, ZMQStartMessage
 
 logging.basicConfig(
     level=logging.INFO,
@@ -79,6 +79,8 @@ class ZmqStream:
         self.series_unique_id = None
         self.frames = None
         self.hdf5_file_path = hdf5_file_path
+        self.detector_config = DetectorConfiguration()
+
         self.create_list_of_compressed_frames(
             self.hdf5_file_path, self.compression, self.number_of_data_files
         )
@@ -100,6 +102,42 @@ class ZmqStream:
         """
         for key, val in self.start_message.items():
             setattr(zmq_start_message, key, val)
+
+    def _update_detector_configuration(self, hf: h5py.File) -> None:
+        """
+        Updates the detector configuration by reading the detector
+        condig from a hdf5 file
+
+        Parameters
+        ----------
+        hf : h5py.File
+            A hdf5 file
+
+        Returns
+        -------
+        None
+        """
+        try:
+            self.detector_config.detector_readout_time = hf[
+                "/entry/instrument/detector/detector_readout_time"
+            ]
+            self.detector_config.detector_bit_depth_image = hf[
+                "/entry/instrument/detector/bit_depth_image"
+            ]
+            self.detector_config.detector_bit_depth_readout = hf[
+                "/entry/instrument/detector/bit_depth_readout"
+            ]
+            self.detector_config.detector_compression = hf[
+                "/entry/instrument/detector/detectorSpecific/compression"
+            ]
+            self.detector_config.detector_countrate_correction_cutoff = hf[
+                "/entry/instrument/detector/detectorSpecific/countrate_correction_count_cutoff"
+            ]
+        except KeyError:
+            logging.warning(
+                "Detector configuration could not be loaded. Using detector "
+                "configuration defaults"
+            )
 
     def create_list_of_compressed_frames(
         self,
@@ -153,6 +191,7 @@ class ZmqStream:
                 hdf5_file
             ).header()
             self._update_zmq_start_message()
+            self._update_detector_configuration(hdf5_file)
 
         self.number_of_frames_per_trigger = zmq_start_message.number_of_images
 

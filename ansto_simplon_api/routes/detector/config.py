@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
 from ...schemas.configuration import (
-    DetectorConfiguration,
     SimplonRequestAny,
     SimplonRequestBool,
     SimplonRequestDict,
@@ -13,7 +12,6 @@ from ...simulate_zmq_stream import zmq_start_message, zmq_stream
 
 router = APIRouter(prefix="/detector/api/1.8.0/config", tags=["Detector Configuration"])
 
-detector_configuration = DetectorConfiguration()
 
 ### Detector subsystem config
 # @router.put("/auto_summation")
@@ -48,20 +46,20 @@ async def put_beam_center_y(input: SimplonRequestFloat):
 
 @router.put("/bit_depth_image")
 async def put_bit_depth_image(input: SimplonRequestInt):
-    detector_configuration.detector_bit_depth_image = input.value
+    zmq_stream.detector_config.detector_bit_depth_image = input.value
     # the bit depth image is not the dtype
-    return {"value": detector_configuration.detector_bit_depth_image}
+    return {"value": zmq_stream.detector_config.detector_bit_depth_image}
 
 
 @router.get("/bit_depth_image")
 async def get_bit_depth_image():
-    return {"value": detector_configuration.detector_bit_depth_image}
+    return {"value": zmq_stream.detector_config.detector_bit_depth_image}
 
 
 # @router.put("/bit_depth_readout")
 @router.get("/bit_depth_readout")
 async def get_bit_depth_readout():
-    return {"value": 16}
+    return {"value": zmq_stream.detector_config.detector_bit_depth_readout}
 
 
 # chi_increment
@@ -106,7 +104,7 @@ async def put_countrate_correction_applied(input: SimplonRequestBool):
 # @router.put("/countrate_correction_count_cutoff")
 @router.get("/countrate_correction_count_cutoff")
 async def get_countrate_correction_count_cutoff():
-    return {"value": 133343}
+    return {"value": zmq_stream.detector_config.detector_countrate_correction_cutoff}
 
 
 # data_collection_date
@@ -150,13 +148,13 @@ async def get_detector_number():
 
 @router.get("/detector_readout_time")
 async def get_detector_readout_time():
-    return {"value": detector_configuration.detector_readout_time}
+    return {"value": zmq_stream.detector_config.detector_readout_time}
 
 
 @router.put("/detector_readout_time")
 async def put_detector_readout_time(input: SimplonRequestFloat):
-    detector_configuration.detector_readout_time = input.value
-    return {"value": detector_configuration.detector_readout_time}
+    zmq_stream.detector_config.detector_readout_time = input.value
+    return {"value": zmq_stream.detector_config.detector_readout_time}
 
 
 # @router.put("/eiger_fw_version")
@@ -289,7 +287,7 @@ async def put_threshold_energy(input: SimplonRequestDict):
 # @router.put("/trigger_mode")
 @router.get("/trigger_mode")
 async def get_trigger_mode():
-    return {"value": "exts"}
+    return {"value": zmq_stream.detector_config.detector_trigger_mode}
 
 
 # trigger_start_delay
