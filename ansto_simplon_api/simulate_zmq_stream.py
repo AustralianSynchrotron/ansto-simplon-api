@@ -375,7 +375,7 @@ except KeyError:
         "HDF5_MASTER_FILE environment variable"
     )
 
-DELAY_BETWEEN_FRAMES = float(environ.get("DELAY_BETWEEN_FRAMES", "0.1"))
+DELAY_BETWEEN_FRAMES = float(environ.get("DELAY_BETWEEN_FRAMES", "0.01"))
 NUMBER_OF_DATA_FILES = int(environ.get("NUMBER_OF_DATA_FILES", "1"))
 
 zmq_stream = ZmqStream(
