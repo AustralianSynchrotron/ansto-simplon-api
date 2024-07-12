@@ -122,11 +122,11 @@ class Parse:
             "countrate_correction_lookup_table": None,
             "detector_description": self.parse("description"),
             "detector_serial_number": self.parse("detector_number"),
-            "detector_translation": [
-                0.0,
-                0.0,
-                self.parse("detector_distance"),
-            ],
+            "detector_translation": list(
+                np.array(
+                    self.hf["/entry/instrument/detector/geometry/translation/distances"]
+                )
+            ),
             "flatfield": None,
             "flatfield_enabled": bool(self.parse("flatfield_correction_applied")),
             "frame_time": self.parse("frame_time"),
