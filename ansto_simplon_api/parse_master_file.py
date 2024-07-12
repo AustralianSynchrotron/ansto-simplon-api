@@ -113,7 +113,7 @@ class Parse:
             saturation_value = 33000
         start_message = {
             "type": "start",
-            # arm_date is set when we arm the detector in real time
+            "arm_date": self.parse("data_collection_date"),
             "beam_center_x": self.parse("beam_center_x"),
             "beam_center_y": self.parse("beam_center_y"),
             "channels": ["1"],

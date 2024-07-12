@@ -160,7 +160,7 @@ async def put_detector_readout_time(input: SimplonRequestFloat):
 # @router.put("/eiger_fw_version")
 @router.get("/eiger_fw_version")
 async def get_eiger_fw_version():
-    return {"value": "release-2020.2.5"}
+    return {"value": zmq_stream.detector_config.eiger_fw_version}
 
 
 # element
@@ -262,7 +262,7 @@ async def get_sensor_thickness():
 # @router.put("/software_version")
 @router.get("/software_version")
 async def get_software_version():
-    return {"value": "1.8.0"}
+    return {"value": zmq_stream.detector_config.software_version}
 
 
 # threshold_energy

@@ -83,3 +83,5 @@ class DetectorConfiguration(BaseModel):
     detector_ntrigger: int = 1
     detector_number_of_excluded_pixels: int = 1251206
     detector_trigger_mode: str = "exts"
+    software_version: str = "E-32-0130"
+    eiger_fw_version: str = "release-2022.1.2rc2"

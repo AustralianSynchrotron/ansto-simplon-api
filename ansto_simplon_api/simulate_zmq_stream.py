@@ -137,6 +137,16 @@ class ZmqStream:
                     "/entry/instrument/detector/detectorSpecific/countrate_correction_count_cutoff"  # noqa
                 ][()]
             )
+            self.detector_config.software_version = str(
+                hf["/entry/instrument/detector/detectorSpecific/software_version"][
+                    ()
+                ].decode()
+            )
+            self.detector_config.eiger_fw_version = str(
+                hf["/entry/instrument/detector/detectorSpecific/eiger_fw_version"][
+                    ()
+                ].decode()
+            )
         except KeyError:
             logging.warning(
                 "Detector configuration could not be loaded. Using detector "
