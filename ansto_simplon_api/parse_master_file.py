@@ -1,5 +1,13 @@
+import logging
+
 import h5py
 import numpy as np
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+    datefmt="%d-%m-%Y %H:%M:%S",
+)
 
 
 class Parse:
@@ -91,6 +99,18 @@ class Parse:
             message structure.
 
         """
+        try:
+            saturation_value = int(
+                np.array(
+                    self.hf["/entry/instrument/detector/saturation_value"]
+                ).tolist()
+            )
+        except KeyError:
+            logging.warning(
+                "/entry/instrument/detector/saturation_value was not found in the master file. "
+                "Setting saturation value to 33000"
+            )
+            saturation_value = 33000
         start_message = {
             "type": "start",
             "arm_date": self.parse("data_collection_date"),
@@ -104,11 +124,9 @@ class Parse:
             "countrate_correction_lookup_table": None,
             "detector_description": self.parse("description"),
             "detector_serial_number": self.parse("detector_number"),
-            "detector_translation": [
-                0.0,
-                0.0,
-                self.parse("detector_distance"),
-            ],
+            "detector_translation": np.array(
+                self.hf["/entry/instrument/detector/geometry/translation/distances"]
+            ).tolist(),
             "flatfield": None,
             "flatfield_enabled": bool(self.parse("flatfield_correction_applied")),
             "frame_time": self.parse("frame_time"),
@@ -127,12 +145,21 @@ class Parse:
             "image_size_y": self.parse("y_pixels_in_detector"),
             "incident_energy": self.parse("photon_energy"),
             "incident_wavelength": self.parse("incident_wavelength"),
-            "number_of_images": None,  # self.parse("nimages"),
+            "number_of_images": int(
+                np.array(
+                    self.hf["/entry/instrument/detector/detectorSpecific/ntrigger"]
+                ).tolist()
+            )
+            * int(
+                np.array(
+                    self.hf["/entry/instrument/detector/detectorSpecific/nimages"]
+                ).tolist()
+            ),
             "pixel_mask": None,
             "pixel_mask_enabled": bool(self.parse("pixel_mask_applied")),
             "pixel_size_x": self.parse("x_pixel_size"),
             "pixel_size_y": self.parse("y_pixel_size"),
-            "saturation_value": self.parse("saturation_value"),
+            "saturation_value": saturation_value,
             "sensor_material": self.parse("sensor_material"),
             "sensor_thickness": self.parse("sensor_thickness"),
             "series_id": None,  # int
@@ -142,7 +169,7 @@ class Parse:
                 "threshold_2": self.parse("threshold_energy") * 3,
             },
             "user_data": {"pi": float(np.pi)},
-            "virtual_pixel_correction_applied": bool(
+            "virtual_pixel_interpolation_enabled": bool(
                 self.parse("virtual_pixel_correction_applied")
             ),
         }

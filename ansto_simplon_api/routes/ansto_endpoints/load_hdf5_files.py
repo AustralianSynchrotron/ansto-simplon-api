@@ -3,6 +3,7 @@ from fastapi.exceptions import HTTPException
 from starlette import status
 
 from ...schemas.ansto_endpoints import LoadHDF5File
+from ...schemas.configuration import SimplonRequestFloat
 from ...simulate_zmq_stream import zmq_stream
 
 router = APIRouter(prefix="/ansto_endpoints", tags=["ANSTO Endpoints"])
@@ -38,3 +39,16 @@ async def get_master_file() -> LoadHDF5File:
         number_of_datafiles=zmq_stream.number_of_data_files,
         compression=zmq_stream.compression,
     )
+
+
+@router.get("/delay_between_frames")
+async def get_delay_between_frames_in_seconds() -> SimplonRequestFloat:
+    return SimplonRequestFloat(value=zmq_stream.delay_between_frames)
+
+
+@router.put("/delay_between_frames")
+async def set_delay_between_frames_in_seconds(
+    delay: SimplonRequestFloat,
+) -> SimplonRequestFloat:
+    zmq_stream.delay_between_frames = delay.value
+    return SimplonRequestFloat(value=zmq_stream.delay_between_frames)

@@ -16,7 +16,7 @@ import zmq
 from tqdm import trange
 
 from .parse_master_file import Parse
-from .schemas.configuration import ZMQStartMessage
+from .schemas.configuration import DetectorConfiguration, ZMQStartMessage
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,7 +40,6 @@ class ZmqStream:
         hdf5_file_path: str,
         delay_between_frames: float = 0.1,
         number_of_data_files: int = 1,
-        number_of_frames_per_trigger: int = 200,
     ) -> None:
         """
         Parameters
@@ -53,8 +52,6 @@ class ZmqStream:
             Time delay between images sent via the ZeroMQ stream [seconds]
         number_of_data_files : int, optional
             Number of data files loaded in memory
-        number_of_frames_per_trigger : int, optional
-            Number of frames per trigger
 
         Returns
         -------
@@ -65,7 +62,7 @@ class ZmqStream:
         self.compression = "bslz4"
         self.delay_between_frames = delay_between_frames
         self.number_of_data_files = number_of_data_files
-        self.number_of_frames_per_trigger = number_of_frames_per_trigger
+        self.number_of_frames_per_trigger = None
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUSH)
@@ -82,6 +79,8 @@ class ZmqStream:
         self.series_unique_id = None
         self.frames = None
         self.hdf5_file_path = hdf5_file_path
+        self.detector_config = DetectorConfiguration()
+
         self.create_list_of_compressed_frames(
             self.hdf5_file_path, self.compression, self.number_of_data_files
         )
@@ -91,6 +90,68 @@ class ZmqStream:
         logging.info(f"Compression type: {self.compression}")
         logging.info(f"Delay between frames (s): {self.delay_between_frames}")
         logging.info(f"Number of data files: {self.number_of_data_files}")
+
+    def _update_zmq_start_message(self) -> None:
+        """
+        Updates the ZMQ start message with values derived from the master file
+        loaded into the Simplon API.
+
+        Returns
+        -------
+        None
+        """
+        for key, val in self.start_message.items():
+            setattr(zmq_start_message, key, val)
+
+    def _update_detector_configuration(self, hf: h5py.File) -> None:
+        """
+        Updates the detector configuration by reading the detector
+        config from a hdf5 file
+
+        Parameters
+        ----------
+        hf : h5py.File
+            A hdf5 file
+
+        Returns
+        -------
+        None
+        """
+        try:
+            self.detector_config.detector_readout_time = float(
+                hf["/entry/instrument/detector/detector_readout_time"][()]
+            )
+            self.detector_config.detector_bit_depth_image = int(
+                hf["/entry/instrument/detector/bit_depth_image"][()]
+            )
+            self.detector_config.detector_bit_depth_readout = int(
+                hf["/entry/instrument/detector/bit_depth_readout"][()]
+            )
+            self.detector_config.detector_compression = str(
+                hf["/entry/instrument/detector/detectorSpecific/compression"][
+                    ()
+                ].decode()
+            )
+            self.detector_config.detector_countrate_correction_cutoff = int(
+                hf[
+                    "/entry/instrument/detector/detectorSpecific/countrate_correction_count_cutoff"  # noqa
+                ][()]
+            )
+            self.detector_config.software_version = str(
+                hf["/entry/instrument/detector/detectorSpecific/software_version"][
+                    ()
+                ].decode()
+            )
+            self.detector_config.eiger_fw_version = str(
+                hf["/entry/instrument/detector/detectorSpecific/eiger_fw_version"][
+                    ()
+                ].decode()
+            )
+        except KeyError:
+            logging.warning(
+                "Detector configuration could not be loaded. Using detector "
+                "configuration defaults"
+            )
 
     def create_list_of_compressed_frames(
         self,
@@ -143,6 +204,10 @@ class ZmqStream:
             self.start_message, self.image_message, self.end_message = Parse(
                 hdf5_file
             ).header()
+            self._update_zmq_start_message()
+            self._update_detector_configuration(hdf5_file)
+
+        self.number_of_frames_per_trigger = zmq_start_message.number_of_images
 
         number_of_frames_per_data_file = [
             datafile.shape[0] for datafile in datafile_list
@@ -153,6 +218,7 @@ class ZmqStream:
         zmq_start_message.image_size_y = array_shape[0]
 
         dtype = datafile_list[0].dtype
+        zmq_start_message.image_dtype = str(dtype)
 
         frame_list = []
 
@@ -363,14 +429,12 @@ except KeyError:
         "HDF5_MASTER_FILE environment variable"
     )
 
-DELAY_BETWEEN_FRAMES = float(environ.get("DELAY_BETWEEN_FRAMES", "0.1"))
+DELAY_BETWEEN_FRAMES = float(environ.get("DELAY_BETWEEN_FRAMES", "0.01"))
 NUMBER_OF_DATA_FILES = int(environ.get("NUMBER_OF_DATA_FILES", "1"))
-NUMBER_OF_FRAMES_PER_TRIGGER = int(environ.get("NUMBER_OF_FRAMES_PER_TRIGGER", "1"))
 
 zmq_stream = ZmqStream(
     address=ZMQ_ADDRESS,
     hdf5_file_path=HDF5_MASTER_FILE,
     delay_between_frames=DELAY_BETWEEN_FRAMES,
     number_of_data_files=NUMBER_OF_DATA_FILES,
-    number_of_frames_per_trigger=NUMBER_OF_FRAMES_PER_TRIGGER,
 )
