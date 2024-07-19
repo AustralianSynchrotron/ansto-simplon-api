@@ -188,7 +188,7 @@ class ZmqStream:
         self.compression = compression
         self.number_of_data_files = number_of_datafiles
 
-        with h5py.File(hdf5_file_path) as hdf5_file:
+        with h5py.File(hdf5_file_path, mode="r") as hdf5_file:
             keys = list(hdf5_file["entry"]["data"].keys())
 
             if number_of_datafiles is None:

@@ -123,16 +123,19 @@ async def get_description():
 
 @router.get("/detector_distance")
 async def get_detector_distance():
-    return {"value": zmq_start_message.detector_translation}
+    return {"value": zmq_start_message.detector_translation[2]}
 
 
 @router.put("/detector_distance")
 async def put_detector_distance(
     input: SimplonRequestFloat,
 ):
-    detector_translation = (0, 0, input.value)
-    zmq_start_message.detector_translation = detector_translation
-    return {"value": zmq_start_message.detector_translation}
+    zmq_start_message.detector_translation = [
+        zmq_start_message.detector_translation[0],
+        zmq_start_message.detector_translation[1],
+        input.value,
+    ]
+    return {"value": zmq_start_message.detector_translation[2]}
 
 
 @router.put("/detector_number")
