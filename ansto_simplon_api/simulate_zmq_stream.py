@@ -4,7 +4,6 @@ import time
 import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
-from os import environ
 
 import bitshuffle
 import cbor2
@@ -17,6 +16,7 @@ from tqdm import trange
 
 from .parse_master_file import Parse
 from .schemas.configuration import DetectorConfiguration, ZMQStartMessage
+from .config import get_settings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,6 +24,7 @@ logging.basicConfig(
     datefmt="%d-%m-%Y %H:%M:%S",
 )
 
+config = get_settings()
 zmq_start_message = ZMQStartMessage()
 
 
@@ -419,22 +420,9 @@ class ZmqStream:
         self.stream_frames(self.frames)
         self.stream_end_message()
 
-
-ZMQ_ADDRESS = environ.get("ZMQ_ADDRESS", "tcp://*:5555")
-try:
-    HDF5_MASTER_FILE = environ["HDF5_MASTER_FILE"]
-except KeyError as ex:
-    raise KeyError(
-        "No HDF5 master file found. Set the absolute path of the HDF5 master file via the "
-        "HDF5_MASTER_FILE environment variable"
-    ) from ex
-
-DELAY_BETWEEN_FRAMES = float(environ.get("DELAY_BETWEEN_FRAMES", "0.01"))
-NUMBER_OF_DATA_FILES = int(environ.get("NUMBER_OF_DATA_FILES", "1"))
-
 zmq_stream = ZmqStream(
-    address=ZMQ_ADDRESS,
-    hdf5_file_path=HDF5_MASTER_FILE,
-    delay_between_frames=DELAY_BETWEEN_FRAMES,
-    number_of_data_files=NUMBER_OF_DATA_FILES,
+    address=config.ZMQ_ADDRESS,
+    hdf5_file_path=config.HDF5_MASTER_FILE,
+    delay_between_frames=config.DELAY_BETWEEN_FRAMES,
+    number_of_data_files=config.NUMBER_OF_DATA_FILES,
 )

@@ -1,6 +1,6 @@
 # ANSTO Sim-Plon API
 A simulated Dectris Simplon API. Aims to have the same RESTlike interface and produce a ZMQ stream of data from an input Hdf5 file.
-The input HDF5 file is defined by the environment variable `HDF5_MASTER_FILE`, e.g. `HDF5_MASTER_FILE=/path/to/HDF5_masterfile.h5`
+The input HDF5 file is defined by the environment variable `AS_HDF5_MASTER_FILE`, e.g. `AS_HDF5_MASTER_FILE=/path/to/HDF5_masterfile.h5`
 
 Currently generates a [Stream V2] release compatible ZMQ stream.
 
@@ -8,10 +8,10 @@ Currently generates a [Stream V2] release compatible ZMQ stream.
 
 **Simulated Simplon API Configuration**
 
-   To run the simulated Simplon API, you need to specify the path of an HDF5 master file using the `HDF5_MASTER_FILE` environment variable. You can also configure other parameters using the following environment variables:
+   To run the simulated Simplon API, you need to specify the path of an HDF5 master file using the `AS_HDF5_MASTER_FILE` environment variable. You can also configure other parameters using the following environment variables:
 
-   - `DELAY_BETWEEN_FRAMES`: Specifies the delay between frames in seconds (default: 0.01 s). This number can be modified via the `/ansto_endpoints/delay_between_frames` endpoint.
-   - `NUMBER_OF_DATA_FILES`: Sets the number of data files from the master file loaded into memory (default: 1). The number of datafiles can be additionally modified when loading a new master file using the
+   - `AS_DELAY_BETWEEN_FRAMES`: Specifies the delay between frames in seconds (default: 0.01 s). This number can be modified via the `/ansto_endpoints/delay_between_frames` endpoint.
+   - `AS_NUMBER_OF_DATA_FILES`: Sets the number of data files from the master file loaded into memory (default: 1). The number of datafiles can be additionally modified when loading a new master file using the
    `/ansto_endpoints/hdf5_master_file` endpoint.
    - The number of frames per trigger is set automatically to the number of frames in the master file. This can be modified by using the `/detector/api/1.8.0/config/nimages` endpoint.
 
@@ -34,7 +34,7 @@ Follow these steps to run the simulated SIMPLON API and ensure its proper functi
 
 2. **Set the HDF5 File Path**
 
-   Before running the API, set the `HDF5_MASTER_FILE` environment variable using the following command:
+   Before running the API, set the `AS_HDF5_MASTER_FILE` environment variable using the following command:
    ```bash
    export HDF5_MASTER_FILE=/path/to/HDF5_master_file
    ```

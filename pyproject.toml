@@ -13,7 +13,9 @@ documentation = "https://github.com/AustralianSynchrotron/ansto-simplon-api"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-fastapi = ">=0.114.0,<0.200.0"
+fastapi = { version = ">=0.114.0,<0.200.0", extras = ["standard"] }
+pydantic = ">=2.9.1,<2.10.0"
+pydantic-settings = ">=2.4.0,<3.0.0"
 numpy = ">=1.26.4,<2.0.0"
 pyzmq = "26.2.0"
 h5py = "3.11.0"
