@@ -17,16 +17,16 @@ async def set_master_file(hdf5_model: LoadHDF5File):
             compression=hdf5_model.compression,
             number_of_datafiles=hdf5_model.number_of_datafiles,
         )
-    except IndexError:
+    except IndexError as ex:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="The number of datafiles specified exceed the number of datafiles available "
             "in the master file. Reduce number_of_datafiles",
-        )
-    except Exception as e:
+        ) from ex
+    except Exception as ex:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(ex)
+        ) from ex
     zmq_stream.frame_id = 0
     zmq_stream.image_number = 0
     return {"value": zmq_stream.hdf5_file_path}

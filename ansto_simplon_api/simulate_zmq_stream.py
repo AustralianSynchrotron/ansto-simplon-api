@@ -423,11 +423,11 @@ class ZmqStream:
 ZMQ_ADDRESS = environ.get("ZMQ_ADDRESS", "tcp://*:5555")
 try:
     HDF5_MASTER_FILE = environ["HDF5_MASTER_FILE"]
-except KeyError:
+except KeyError as ex:
     raise KeyError(
         "No HDF5 master file found. Set the absolute path of the HDF5 master file via the "
         "HDF5_MASTER_FILE environment variable"
-    )
+    ) from ex
 
 DELAY_BETWEEN_FRAMES = float(environ.get("DELAY_BETWEEN_FRAMES", "0.01"))
 NUMBER_OF_DATA_FILES = int(environ.get("NUMBER_OF_DATA_FILES", "1"))
