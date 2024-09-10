@@ -14,9 +14,9 @@ import numpy.typing as npt
 import zmq
 from tqdm import trange
 
+from .config import get_settings
 from .parse_master_file import Parse
 from .schemas.configuration import DetectorConfiguration, ZMQStartMessage
-from .config import get_settings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -419,6 +419,7 @@ class ZmqStream:
         self.stream_start_message()
         self.stream_frames(self.frames)
         self.stream_end_message()
+
 
 zmq_stream = ZmqStream(
     address=config.ZMQ_ADDRESS,
