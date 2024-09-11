@@ -18,12 +18,11 @@ Currently generates a [Stream V2] release compatible ZMQ stream.
 ## Running the simulated SIMPLON API
 
 ### Running the app using docker (Recommended)
-
-Run
+You can build and run the app by simply running:
 ```bash
 docker compose up --detach
 ```
-You can modify the app's behavior by setting environment variables in the `docker-compose.yml` file
+The app's behavior can be modified by setting environment variables in the `docker-compose.yml` file
 
 ### Running the app locally
 
