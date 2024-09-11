@@ -43,6 +43,12 @@ Follow these steps to run the simulated SIMPLON API and ensure its proper functi
       ```bash
    uvicorn ansto_simplon_api.main:app
    ```
+   > **Note:** The FastAPI Swagger / ReDoc endpoint documentation is disabled by default, to enable the documentation, please set the following environment variables.
+   > ```bash
+   > export AS_API_DOCS_URL=/swagger
+   > export AS_API_REDOC_URL=/docs
+   > export AS_API_OPENAPI_URL=/openapi.json
+   >```
 
 4. **Start the ZMQ Consumer**
 
