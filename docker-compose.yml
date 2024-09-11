@@ -13,7 +13,9 @@ services:
       - "AS_ZMQ_ADDRESS=tcp://*:5555"
       #To access the masterfile, you can either copy it to the container by modifying
       # the dockerfile, or you can mount a volume containing the masterfile.
-      - "AS_HDF5_MASTER_FILE=/path/to/HDF5_master_file"
+      # If the AS_HDF5_MASTER_FILE is not  specified, the default mastef file included
+      # in this repos is used (example_1_master.h5)
+      #- "AS_HDF5_MASTER_FILE=/path/to/HDF5_master_file"
       - "AS_DELAY_BETWEEN_FRAMES=0.0" # seconds
       - "AS_NUMBER_OF_DATA_FILES=1" # 2 seems to be the maximum number of files we can load into memory (16M data)
       - "AS_NUMBER_OF_FRAMES_PER_TRIGGER=30"
