@@ -17,7 +17,17 @@ Currently generates a [Stream V2] release compatible ZMQ stream.
 
 ## Running the simulated SIMPLON API
 
-Follow these steps to run the simulated SIMPLON API and ensure its proper functionality:
+### Running the app using docker (Recommended)
+
+Run
+```bash
+docker compose up --detach
+```
+You can modify the app's behavior by setting environment variables in the `docker-compose.yml` file
+
+### Running the app locally
+
+Follow these steps to run the app locally:
 
 1. **Install the Library**
 
@@ -54,16 +64,18 @@ Follow these steps to run the simulated SIMPLON API and ensure its proper functi
    > export AS_API_OPENAPI_URL=/openapi.json
    >```
 
-4. **Start the ZMQ Consumer**
+## Example usage
+Once the simulated SIMPLON API is up and running, you can verify its functionality by:
 
-Once the simulated SIMPLON API is up and running, you can verify its functionality by running the ZMQ receiver and triggering the detector:
+1. **Starting the ZMQ Consumer**
+
 ```bash
 python examples/receiver.py
 ```
 
-5. **Arm, trigger and disarm the detector**
+2. **Triggering the detector**
 
-Finally run the arm, trigger, and disarm script as follows:
+You can arm, trigger, and disarm the detector using the following script:
 ```bash
 python examples/trigger_detector.py
 ```
