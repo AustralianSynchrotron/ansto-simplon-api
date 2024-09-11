@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: debug_runtime
     container_name: mx-simplon-api
     environment:
       - "AS_API_DOCS_URL=/swagger"
