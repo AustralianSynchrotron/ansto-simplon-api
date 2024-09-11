@@ -1,6 +1,6 @@
-FROM python:3.11
+FROM python:3.12
 
-ENV HDF5_MASTER_FILE=/share_data/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5
+ENV AS_HDF5_MASTER_FILE=/share_data/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5
 ENV POETRY_VERSION=1.8.3
 
 # Install OS packages

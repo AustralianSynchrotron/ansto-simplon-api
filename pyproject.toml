@@ -1,33 +1,42 @@
 [tool.poetry]
 name = "ansto-simplon-api"
-version = "0.2.7"
+version = "0.3.0"
 description = "Simulated simplon api"
-authors = ["Francisco Hernandez Vivanco <hernandf@ansto.gov.au>",
-           "Daniel Eriksson <daniele@ansto.gov.au>"]
+authors = [
+  "Francisco Hernandez Vivanco <hernandf@ansto.gov.au>",
+  "Daniel Eriksson <daniele@ansto.gov.au>"
+]
+readme = "README.md"
+homepage = "https://github.com/AustralianSynchrotron/ansto-simplon-api"
+repository = "https://github.com/AustralianSynchrotron/ansto-simplon-api"
+documentation = "https://github.com/AustralianSynchrotron/ansto-simplon-api"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-fastapi = "^0.111.0"
-numpy = "^1.26.4"
-pyzmq = "26.0.3"
+python = ">=3.12,<3.13"
+fastapi = { version = ">=0.114.0,<0.200.0", extras = ["standard"] }
+pydantic = ">=2.9.1,<2.10.0"
+pydantic-settings = ">=2.4.0,<3.0.0"
+numpy = ">=1.26.4,<2.0.0"
+pyzmq = "26.2.0"
 h5py = "3.11.0"
 hdf5plugin = "4.4.0"
-uvicorn = "^0.30.0"
-lz4 = " 4.3.3"
-tqdm = "^4.66.4"
-cbor2 = "5.6.3"
+uvicorn = ">=0.30.6,<0.31.0"
+lz4 = "4.3.3"
+tqdm = ">=4.66.5,<5.0.0"
+cbor2 = ">=5.6.4,<5.7.0"
 bitshuffle = "0.5.1"
-requests = "2.32.3"
+requests = ">=2.32.3"
 dectris-compression = "^0.3.1"
 
-[tool.poetry.dev-dependencies]
-pre-commit = "^2.17.0"
-flake8 = "^4.0.1"
-black = "^22.1.0"
-isort = "^5.10.1"
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "3.8.0"
 
 [tool.black]
 line-length = 88
+target_version = ["py312"]
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -42,6 +51,22 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.pyright]
+ignore = ["**/typing_extensions.py"]
+pythonVersion = "3.12"
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = ["B"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

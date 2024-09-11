@@ -1,17 +1,29 @@
 version: '3.8'
 
 services:
-  mx-simplon-api:
-    build: .
+  mx_simplon_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: mx-simplon-api
     environment:
-      ZMQ_ADDRESS: tcp://*:5555
+      - "AS_API_DOCS_URL=/swagger"
+      - "AS_API_REDOC_URL=/docs"
+      - "AS_API_OPENAPI_URL=/openapi.json"
+      - "AS_ZMQ_ADDRESS=tcp://*:5555"
       #To access the masterfile, you can either copy it to the container by modifying
       # the dockerfile, or you can mount a volume containing the masterfile.
-      HDF5_MASTER_FILE: /path/to/HDF5_master_file
-      DELAY_BETWEEN_FRAMES: 0.0 # seconds
-      NUMBER_OF_DATA_FILES: 1 # 2 seems to be the maximum number of files we can load into memory (16M data)
-      NUMBER_OF_FRAMES_PER_TRIGGER: 30
+      - "AS_HDF5_MASTER_FILE=/path/to/HDF5_master_file"
+      - "AS_DELAY_BETWEEN_FRAMES=0.0" # seconds
+      - "AS_NUMBER_OF_DATA_FILES=1" # 2 seems to be the maximum number of files we can load into memory (16M data)
+      - "AS_NUMBER_OF_FRAMES_PER_TRIGGER=30"
     ports:
       - "8000:8000"
       - "5555:5555"
+    hostname: mx_simplon_api
+    healthcheck:
+      test: curl --fail http://127.0.0.1:8854/healthz || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 3s
+      timeout: 5s
