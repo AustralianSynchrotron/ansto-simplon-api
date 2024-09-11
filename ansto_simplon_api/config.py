@@ -56,6 +56,9 @@ class ZMQStreamSettings(BaseSettings):
         GetPydanticSchema(lambda _, _h: _h.generate_schema(FilePath)),
     ] = Field(
         title="HDF5 Master File",
+        default=os_realpath(
+            os_joinpath(CUR_DIR, "master_file_examples", "example_1_master.h5")
+        ),
     )
     DELAY_BETWEEN_FRAMES: float = Field(
         title="Delay Between Frames",

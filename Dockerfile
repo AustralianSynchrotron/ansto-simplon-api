@@ -1,6 +1,5 @@
 FROM python:3.12
 
-ENV AS_HDF5_MASTER_FILE=/share_data/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5
 ENV POETRY_VERSION=1.8.3
 
 # Install OS packages
@@ -12,7 +11,7 @@ RUN useradd -ms /bin/bash asuser
 WORKDIR /home/asuser/
 
 # Setup Poetry environment
-COPY pyproject.toml poetry.lock /home/asuser/
+COPY pyproject.toml poetry.lock README.md /home/asuser/
 RUN pip install "poetry==$POETRY_VERSION"
 RUN poetry config virtualenvs.create false
 RUN poetry install
