@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
 from ...schemas.configuration import (
-    SimplonRequestAny,
     SimplonRequestBool,
     SimplonRequestDict,
     SimplonRequestFloat,
@@ -212,14 +211,33 @@ async def get_ntrigger():
     return {"value": 1}
 
 
-# @router.put("/number_of_excluded_pixels")
-@router.get("/ntrigger")
+@router.get("/number_of_excluded_pixels")
 async def get_number_of_excluded_pixels():
     return {"value": 664708}
 
 
-# omega_increment
-# omega_start
+@router.get("/omega_start")
+async def get_omega_start():
+    return {"value": zmq_start_message.goniometer["omega"]["start"]}
+
+
+@router.put("/omega_start")
+async def put_omega_start(input: SimplonRequestFloat):
+    zmq_start_message.goniometer["omega"]["start"] = input.value
+    return {"value": zmq_start_message.goniometer["omega"]["start"]}
+
+
+@router.get("/omega_increment")
+async def get_omega_increment():
+    return {"value": zmq_start_message.goniometer["omega"]["increment"]}
+
+
+@router.put("/omega_increment")
+async def put_omega_increment(input: SimplonRequestFloat):
+    zmq_start_message.goniometer["omega"]["increment"] = input.value
+    return {"value": zmq_start_message.goniometer["omega"]["increment"]}
+
+
 # phi_increment
 # phi_start
 
@@ -372,17 +390,3 @@ async def put_y_pixels_in_detector(input: SimplonRequestFloat):
 @router.get("/detector_type")
 async def get_detector_type():
     return {"value": "HPC"}
-
-
-@router.get("/goniometer")
-async def get_goniometer():
-    return {"value": zmq_start_message.goniometer}
-
-
-@router.put("/goniometer")
-async def put_goniometer(input: SimplonRequestAny):
-    zmq_start_message.goniometer = input.value
-    return {"value": zmq_start_message.goniometer}
-
-
-# user_data(dict)
