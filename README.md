@@ -32,12 +32,16 @@ Follow these steps to run the simulated SIMPLON API and ensure its proper functi
      ```
      For other operating systems, Install the equivalent libraries for `gcc` and `libhdf5-serial-dev`.
 
-2. **Set the HDF5 File Path**
+2. **(Optional) Set the HDF5 File Path**
 
-   Before running the API, set the `AS_HDF5_MASTER_FILE` environment variable using the following command:
+   The master file loaded into the simplon API can be specified using the `AS_HDF5_MASTER_FILE` environment variable:
    ```bash
    export HDF5_MASTER_FILE=/path/to/HDF5_master_file
    ```
+   If ``AS_HDF5_MASTER_FILE`` is not specified, the default master file included in this repo is used (`example_1_master.h5`)
+
+   Additionally, the master file can also be set dynamically during runtime using the ANSTO endpoints:
+   `/ansto_endpoints/hdf5_master_file` (see the swagger documentation for more information)
 
 3. **Run the FAST-API application**
       ```bash
@@ -68,4 +72,4 @@ After running this script, you should see messages being received by the `receiv
 [Stream V2]: https://github.com/dectris/documentation/tree/main/stream_v2
 
 ## Documentation
-You can see the endpoints currently implemented by accessing the interactive API documentation at [http://localhost:8000/docs](http://localhost:8000/docs). Ensure that the simulated SIMPLON API is up and running to access the documentation.
+You can see the endpoints currently implemented by accessing the interactive API documentation at [http://localhost:8000/swagger](http://localhost:8000/swagger). Ensure that the simulated SIMPLON API is up and running to access the documentation.
