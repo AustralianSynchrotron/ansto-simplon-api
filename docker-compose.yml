@@ -23,9 +23,3 @@ services:
       - "8000:8000"
       - "5555:5555"
     hostname: mx_simplon_api
-    healthcheck:
-      test: curl --fail http://127.0.0.1:8854/healthz || exit 1
-      interval: 10s
-      retries: 5
-      start_period: 3s
-      timeout: 5s
