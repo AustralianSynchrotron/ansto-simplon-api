@@ -36,7 +36,7 @@ Follow these steps to run the simulated SIMPLON API and ensure its proper functi
 
    The master file used by simplon API can be specified via the `AS_HDF5_MASTER_FILE` environment variable:
    ```bash
-   export HDF5_MASTER_FILE=/path/to/HDF5_master_file
+   export AS_HDF5_MASTER_FILE=/path/to/HDF5_master_file
    ```
    If ``AS_HDF5_MASTER_FILE`` is not specified, the default master file included in this repo is used (`example_1_master.h5`)
 
