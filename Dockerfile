@@ -18,7 +18,7 @@ ARG POETRY_VERSION=1.8.3
 ARG POETRY_DEPENDENCY_GROUPS=main
 ARG PIPX_BIN_DIR="/usr/local/bin/"
 ARG USE_EMOJI="false"
-ENV HDF5_MASTER_FILE=/mnt/disk/dev_share/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5
+ENV AS_HDF5_MASTER_FILE=/mnt/disk/dev_share/datasets_full/minimalInsulinMX1/030/testcrystal_0014_master.h5
 
 # Install system packages
 RUN <<EOT bash
