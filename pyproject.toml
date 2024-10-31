@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ansto-simplon-api"
-version = "0.3.2"
+version = "0.3.3"
 description = "Simulated simplon api"
 authors = [
   "Francisco Hernandez Vivanco <hernandf@ansto.gov.au>",
