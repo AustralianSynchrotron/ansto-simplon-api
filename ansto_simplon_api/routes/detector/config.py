@@ -254,8 +254,28 @@ async def put_photon_energy(input: SimplonRequestFloat):
 
 
 # pixel_mask
-# pixel_mask_applied
-# roi_mode
+@router.get("/pixel_mask_applied")
+async def get_pixel_mask():
+    zmq_stream.detector_config.pixel_mask_applied
+    return {"value": zmq_stream.detector_config.pixel_mask_applied}
+
+
+@router.put("/pixel_mask_applied")
+async def set_pixel_mask(input: SimplonRequestBool):
+    zmq_stream.detector_config.pixel_mask_applied = input.value
+    return {"value": zmq_stream.detector_config.pixel_mask_applied}
+
+
+@router.get("/roi_mode")
+async def get_roi_mode():
+    zmq_stream.detector_config.roi_mode
+    return {"value": zmq_stream.detector_config.roi_mode}
+
+
+@router.put("/roi_mode")
+async def put_roi_mode(input: SimplonRequestStr):
+    zmq_stream.detector_config.roi_mode = input.value
+    return {"value": zmq_stream.detector_config.roi_mode}
 
 
 @router.put("/sensor_material")

@@ -24,15 +24,15 @@ class APISettings(BaseSettings):
     )
     API_DOCS_URL: str | None = Field(
         title="OpenAPI Docs Path",
-        default=None,
+        default="/swagger",
     )
     API_REDOC_URL: str | None = Field(
         title="ReDocs Path",
-        default=None,
+        default="/docs",
     )
     API_OPENAPI_URL: str | None = Field(
         title="OpenAPI Path",
-        default=None,
+        default="/openapi.json",
     )
     API_FAVICON: FilePath = Field(
         title="Favicon Image",
