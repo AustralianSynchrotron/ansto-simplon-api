@@ -55,13 +55,6 @@ Follow these steps to run the app locally:
 3. **Run the FAST-API application**
       ```bash
    uvicorn ansto_simplon_api.main:app
-   ```
-   > **Note:** The FastAPI Swagger / ReDoc endpoint documentation is disabled by default, to enable the documentation, please set the following environment variables.
-   > ```bash
-   > export AS_API_DOCS_URL=/swagger
-   > export AS_API_REDOC_URL=/docs
-   > export AS_API_OPENAPI_URL=/openapi.json
-   >```
 
 ## Example usage
 Once the simulated SIMPLON API is up and running, you can verify its functionality by:
