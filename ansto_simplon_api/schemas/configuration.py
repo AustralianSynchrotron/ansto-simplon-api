@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -85,3 +85,10 @@ class DetectorConfiguration(BaseModel):
     detector_trigger_mode: str = "exts"
     software_version: str = "E-32-0130"
     eiger_fw_version: str = "release-2022.1.2rc2"
+    roi_mode: Literal["disabled", "4M"] = "disabled"
+    pixel_mask_applied: bool = True
+
+
+class StreamConfiguration(BaseModel):
+    format: Literal["cbor", "legacy"] = "cbor"
+    mode: Literal["enabled", "disabled"] = "enabled"
