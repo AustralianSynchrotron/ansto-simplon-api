@@ -111,6 +111,14 @@ class Parse:
                 "Setting saturation value to 33000"
             )
             saturation_value = 33000
+        try:
+            start_value = float(self.hf.get("/entry/sample/goniometer/omega")[0])
+        except Exception as e:
+            start_value = 0.0
+            logging.warning(
+                f"Error when trying to get the start value for omega: {e}. Setting start value to 0.0"
+            )
+
         start_message = {
             "type": "start",
             "arm_date": self.parse("data_collection_date"),
@@ -134,7 +142,7 @@ class Parse:
                 "omega": {
                     "increment": self.parse("omega_range_average"),
                     # Needs to get the first item of a list, so can't use parse
-                    "start": float(self.hf.get("/entry/sample/goniometer/omega")[0]),
+                    "start": start_value,
                 },
                 "otherAxis": {
                     "increment": 1.0,
