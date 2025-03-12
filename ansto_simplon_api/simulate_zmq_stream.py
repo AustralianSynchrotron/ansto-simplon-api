@@ -334,7 +334,7 @@ class ZmqStream:
         -------
         None
         """
-        logging.info("Sending frames")
+        logging.info(f"Sending frames to {self.address}")
         t = time.time()
         for _ in trange(self.number_of_frames_per_trigger):
             time.sleep(self.delay_between_frames)
@@ -383,7 +383,7 @@ class ZmqStream:
         """
         self.series_unique_id = str(uuid.uuid4())
 
-        logging.info("Sending start message")
+        logging.info(f"Sending start message to {self.address}")
         zmq_start_message.series_id = self.sequence_id
         zmq_start_message.number_of_images = self.number_of_frames_per_trigger
         zmq_start_message.user_data = self.user_data
@@ -401,7 +401,7 @@ class ZmqStream:
         None
         """
 
-        logging.info("Sending end message")
+        logging.info(f"Sending end message to to {self.address}")
         self.end_message["series_id"] = self.sequence_id
         self.end_message["series_unique_id"] = self.series_unique_id
         message = cbor2.dumps(self.end_message)
