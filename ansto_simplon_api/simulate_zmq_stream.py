@@ -401,7 +401,7 @@ class ZmqStream:
         None
         """
 
-        logging.info(f"Sending end message to to {self.address}")
+        logging.info(f"Sending end message to {self.address}")
         self.end_message["series_id"] = self.sequence_id
         self.end_message["series_unique_id"] = self.series_unique_id
         message = cbor2.dumps(self.end_message)
