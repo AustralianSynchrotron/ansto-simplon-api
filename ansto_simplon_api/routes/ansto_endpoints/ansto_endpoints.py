@@ -1,9 +1,12 @@
+from typing import Literal
+
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from starlette import status
 
 from ...schemas.ansto_endpoints import LoadHDF5File
 from ...schemas.configuration import SimplonRequestFloat
+from ...schemas.status import detector_state
 from ...simulate_zmq_stream import zmq_stream
 
 router = APIRouter(prefix="/ansto_endpoints", tags=["ANSTO Endpoints"])
@@ -52,3 +55,13 @@ async def set_delay_between_frames_in_seconds(
 ) -> SimplonRequestFloat:
     zmq_stream.delay_between_frames = delay.value
     return SimplonRequestFloat(value=zmq_stream.delay_between_frames)
+
+
+@router.put("/state")
+def set_detector_state(
+    state: Literal[
+        "ready", "initialize", "configure", "acquire", "idle", "test", "error", "na"
+    ]
+):
+    detector_state.state = state
+    return {"value": detector_state.state}

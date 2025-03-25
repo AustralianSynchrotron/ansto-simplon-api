@@ -6,7 +6,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import __version__
 from .config import get_settings
-from .routes.ansto_endpoints.load_hdf5_files import router as ansto_endpoints
+from .routes.ansto_endpoints.ansto_endpoints import router as ansto_endpoints
 from .routes.detector.command import router as command
 from .routes.detector.config import router as detector_config
 from .routes.status.status import router as status
