@@ -116,7 +116,8 @@ class Parse:
         except Exception as e:
             start_value = 0.0
             logging.warning(
-                f"Error when trying to get the start value for omega: {e}. Setting start value to 0.0"
+                f"Error when trying to get the start value for omega: {e}. "
+                "Setting start value to 0.0"
             )
 
         start_message = {
