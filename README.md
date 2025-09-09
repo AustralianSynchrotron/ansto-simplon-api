@@ -31,8 +31,7 @@ Follow these steps to run the app locally:
 1. **Install the Library**
 
    You have two options to install the library:
-   - Using Poetry (Recommended): Run `poetry install`.
-   - Using pip: Run `pip install .`.
+   - Using UV (Recommended): Run `uv sync`.
 
      **Note**: For Ubuntu users, additionally install the following packages
      ```bash
