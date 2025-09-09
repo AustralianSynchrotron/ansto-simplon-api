@@ -1,6 +1,6 @@
 [project]
 name = "ansto-simplon-api"
-version = "0.3.8"
+version = "0.3.9"
 description = "Simulated simplon api"
 authors = [
     { name = "Francisco Hernandez Vivanco", email = "hernandf@ansto.gov.au" },
