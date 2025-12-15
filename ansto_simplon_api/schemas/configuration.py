@@ -4,6 +4,14 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 
+class ROIMode(BaseModel):
+    value: Literal["disabled", "4M"]
+
+
+class Compression(BaseModel):
+    value: Literal["bslz4", "none"]
+
+
 class SimplonRequestInt(BaseModel):
     value: int
 
@@ -78,7 +86,7 @@ class DetectorConfiguration(BaseModel):
     detector_readout_time: float = 0.0000001
     detector_bit_depth_image: int = 32
     detector_bit_depth_readout: int = 16
-    detector_compression: str = "bslz4"
+    detector_compression: Literal["bslz4", "none"] = "bslz4"
     detector_countrate_correction_cutoff: int = 126634
     detector_ntrigger: int = 1
     detector_number_of_excluded_pixels: int = 1251206

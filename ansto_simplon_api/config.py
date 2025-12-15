@@ -36,7 +36,7 @@ class APISettings(BaseSettings):
     )
     API_FAVICON: FilePath = Field(
         title="Favicon Image",
-        default=os_realpath(os_joinpath(CUR_DIR, "./favicon.ico")),
+        default=Path(os_realpath(os_joinpath(CUR_DIR, "./favicon.ico"))),
     )
     API_KEY: SecretStr | None = Field(
         title="Service API-Key",

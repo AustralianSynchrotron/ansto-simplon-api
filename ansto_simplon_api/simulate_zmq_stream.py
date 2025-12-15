@@ -4,6 +4,8 @@ import time
 import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Literal
 
 import bitshuffle
 import cbor2
@@ -60,7 +62,7 @@ class ZmqStream:
         """
 
         self.address = address
-        self.compression = "bslz4"
+        self.compression: Literal["bslz4", "none"] = "bslz4"
         self.delay_between_frames = delay_between_frames
         self.number_of_data_files = number_of_data_files
 
@@ -151,7 +153,9 @@ class ZmqStream:
                 hf, "/entry/instrument/detector/detectorSpecific/compression"
             )
             if isinstance(compression, bytes):
-                self.detector_config.detector_compression = compression.decode()
+                compression_str = compression.decode()
+                if compression_str in ("bslz4", "none"):
+                    self.detector_config.detector_compression = compression_str
 
             cutoff = self._get_hdf5_value(
                 hf,
@@ -179,8 +183,8 @@ class ZmqStream:
 
     def create_list_of_compressed_frames(
         self,
-        hdf5_file_path: str,
-        compression: str,
+        hdf5_file_path: str | Path,
+        compression: Literal["bslz4", "none"],
         number_of_datafiles: int,
     ) -> None:
         """
