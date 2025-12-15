@@ -4,6 +4,14 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 
+class ROIMode(BaseModel):
+    value: Literal["disabled", "4M"]
+
+
+class Compression(BaseModel):
+    value: Literal["bslz4", "none"]
+
+
 class SimplonRequestInt(BaseModel):
     value: int
 
@@ -65,10 +73,10 @@ class ZMQStartMessage(BaseModel):
     saturation_value: int | None = 33000  # TODO: check where this value comes from
     sensor_material: str = "Si"
     sensor_thickness: float = 4.5e-04
-    series_id: int | None = 0
-    series_unique_id: str | None = 0
+    series_id: int = 0
+    series_unique_id: str = "0"
     threshold_energy: dict = {"threshold_1": 6350}
-    user_data: dict | None = {}
+    user_data: dict | str | None = ""
     virtual_pixel_interpolation_enabled: bool = True
 
 
@@ -78,7 +86,7 @@ class DetectorConfiguration(BaseModel):
     detector_readout_time: float = 0.0000001
     detector_bit_depth_image: int = 32
     detector_bit_depth_readout: int = 16
-    detector_compression: str = "bslz4"
+    detector_compression: Literal["bslz4", "none"] = "bslz4"
     detector_countrate_correction_cutoff: int = 126634
     detector_ntrigger: int = 1
     detector_number_of_excluded_pixels: int = 1251206

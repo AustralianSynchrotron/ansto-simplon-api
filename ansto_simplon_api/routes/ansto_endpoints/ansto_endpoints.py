@@ -61,7 +61,7 @@ async def set_delay_between_frames_in_seconds(
 def set_detector_state(
     state: Literal[
         "ready", "initialize", "configure", "acquire", "idle", "test", "error", "na"
-    ]
+    ],
 ):
     detector_state.state = state
     return {"value": detector_state.state}

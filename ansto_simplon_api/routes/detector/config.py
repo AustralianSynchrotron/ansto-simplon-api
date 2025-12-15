@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 
 from ...schemas.configuration import (
+    Compression,
+    ROIMode,
     SimplonRequestBool,
     SimplonRequestDict,
     SimplonRequestFloat,
@@ -66,7 +68,7 @@ async def get_bit_depth_readout():
 
 
 @router.put("/compression")
-async def set_compression(compression: SimplonRequestStr):
+async def set_compression(compression: Compression):
     zmq_stream.compression = compression.value
     return {"value": zmq_stream.compression}
 
@@ -273,7 +275,7 @@ async def get_roi_mode():
 
 
 @router.put("/roi_mode")
-async def put_roi_mode(input: SimplonRequestStr):
+async def put_roi_mode(input: ROIMode):
     zmq_stream.detector_config.roi_mode = input.value
     return {"value": zmq_stream.detector_config.roi_mode}
 
@@ -367,7 +369,7 @@ async def get_x_pixels_in_detector():
 
 
 @router.put("/x_pixels_in_detector")
-async def put_x_pixels_in_detector(input: SimplonRequestFloat):
+async def put_x_pixels_in_detector(input: SimplonRequestInt):
     zmq_start_message.image_size_x = input.value
     return {"value": zmq_start_message.image_size_x}
 
@@ -389,7 +391,7 @@ async def get_y_pixels_in_detector():
 
 
 @router.put("/y_pixels_in_detector")
-async def put_y_pixels_in_detector(input: SimplonRequestFloat):
+async def put_y_pixels_in_detector(input: SimplonRequestInt):
     zmq_start_message.image_size_y = input.value
     return {"value": zmq_start_message.image_size_y}
 

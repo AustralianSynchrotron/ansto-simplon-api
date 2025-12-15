@@ -81,8 +81,9 @@ class Parse:
                 except AttributeError:
                     # Leave as is if float or int
                     return item
+        raise KeyError(f"Key {look_for} not found in the HDF5 file entries.")
 
-    def header(self) -> dict:
+    def header(self) -> tuple[dict, dict, dict]:
         """
         Generate the Dectris stream2 message structure,
         and look up the corresponding values in the input
@@ -94,7 +95,7 @@ class Parse:
 
         Returns
         -------
-        start_message, image_message, end_message : dict
+        start_message, image_message, end_message : tuple[dict, dict, dict]
             Three dictionaries corresponding to the stream2
             message structure.
 
@@ -112,7 +113,15 @@ class Parse:
             )
             saturation_value = 33000
         try:
-            start_value = float(self.hf.get("/entry/sample/goniometer/omega")[0])
+            omega_dataset = self.hf.get("/entry/sample/goniometer/omega")
+            if omega_dataset is not None:
+                # If it's a dataset, convert to numpy array and extract the first value
+                omega_array = np.array(omega_dataset)
+                start_value = float(omega_array.flat[0])
+            else:
+                # If it's not found, default to 0.0
+                start_value = 0.0
+
         except Exception as e:
             start_value = 0.0
             logging.warning(
