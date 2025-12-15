@@ -104,6 +104,26 @@ class ZmqStream:
             setattr(zmq_start_message, key, val)
 
     def _get_hdf5_value(self, hf: h5py.File, path: str) -> npt.NDArray | bytes:
+        """
+        Gets a value from a hdf5 file
+
+        Parameters
+        ----------
+        hf : h5py.File
+            A hdf5 file
+        path : str
+            Path to the dataset within the hdf5 file
+
+        Returns
+        -------
+        npt.NDArray | bytes
+            The value of the dataset
+
+        Raises
+        ------
+        KeyError
+            If the path does not exist or is not a dataset
+        """
         obj = hf.get(path)
         if obj is None:
             raise KeyError(path)
@@ -112,6 +132,26 @@ class ZmqStream:
         raise KeyError(f"Path is not a dataset: {path}")
 
     def _get_hdf5_group(self, hf: h5py.File, path: str) -> h5py.Group:
+        """
+        Gets a group from a hdf5 file
+
+        Parameters
+        ----------
+        hf : h5py.File
+            A hdf5 file
+        path : str
+            Path to the group within the hdf5 file
+
+        Returns
+        -------
+        h5py.Group
+            The group at the specified path
+
+        Raises
+        ------
+        KeyError
+            If the path does not exist or is not a group
+        """
         obj = hf.get(path)
         if obj is None:
             raise KeyError(path)
