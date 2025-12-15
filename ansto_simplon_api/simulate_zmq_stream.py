@@ -63,13 +63,11 @@ class ZmqStream:
         self.compression = "bslz4"
         self.delay_between_frames = delay_between_frames
         self.number_of_data_files = number_of_data_files
-        self.number_of_frames_per_trigger = None
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PUSH)
         self.socket.bind(self.address)
 
-        self.frames = None
         self.sequence_id = 0
 
         self.frame_id = 0
@@ -78,7 +76,6 @@ class ZmqStream:
 
         self.user_data = ""  # an empty string is the real default value
         self.series_unique_id = None
-        self.frames = None
         self.hdf5_file_path = hdf5_file_path
         self.detector_config = DetectorConfiguration()
 
@@ -104,6 +101,22 @@ class ZmqStream:
         for key, val in self.start_message.items():
             setattr(zmq_start_message, key, val)
 
+    def _get_hdf5_value(self, hf: h5py.File, path: str) -> npt.NDArray | bytes:
+        obj = hf.get(path)
+        if obj is None:
+            raise KeyError(path)
+        if isinstance(obj, h5py.Dataset):
+            return obj[()]
+        raise KeyError(f"Path is not a dataset: {path}")
+
+    def _get_hdf5_group(self, hf: h5py.File, path: str) -> h5py.Group:
+        obj = hf.get(path)
+        if obj is None:
+            raise KeyError(path)
+        elif isinstance(obj, h5py.Group):
+            return obj
+        raise KeyError(f"Path is not a group: {path}")
+
     def _update_detector_configuration(self, hf: h5py.File) -> None:
         """
         Updates the detector configuration by reading the detector
@@ -119,35 +132,45 @@ class ZmqStream:
         None
         """
         try:
-            self.detector_config.detector_readout_time = float(
-                hf["/entry/instrument/detector/detector_readout_time"][()]
+            readout_time = self._get_hdf5_value(
+                hf, "/entry/instrument/detector/detector_readout_time"
             )
-            self.detector_config.detector_bit_depth_image = int(
-                hf["/entry/instrument/detector/bit_depth_image"][()]
+            self.detector_config.detector_readout_time = float(readout_time)
+
+            bit_depth_image = self._get_hdf5_value(
+                hf, "/entry/instrument/detector/bit_depth_image"
             )
-            self.detector_config.detector_bit_depth_readout = int(
-                hf["/entry/instrument/detector/bit_depth_readout"][()]
+            self.detector_config.detector_bit_depth_image = int(bit_depth_image)
+
+            bit_depth_readout = self._get_hdf5_value(
+                hf, "/entry/instrument/detector/bit_depth_readout"
             )
-            self.detector_config.detector_compression = str(
-                hf["/entry/instrument/detector/detectorSpecific/compression"][
-                    ()
-                ].decode()
+            self.detector_config.detector_bit_depth_readout = int(bit_depth_readout)
+
+            compression = self._get_hdf5_value(
+                hf, "/entry/instrument/detector/detectorSpecific/compression"
             )
-            self.detector_config.detector_countrate_correction_cutoff = int(
-                hf[
-                    "/entry/instrument/detector/detectorSpecific/countrate_correction_count_cutoff"  # noqa
-                ][()]
+            if isinstance(compression, bytes):
+                self.detector_config.detector_compression = compression.decode()
+
+            cutoff = self._get_hdf5_value(
+                hf,
+                "/entry/instrument/detector/detectorSpecific/countrate_correction_count_cutoff",
             )
-            self.detector_config.software_version = str(
-                hf["/entry/instrument/detector/detectorSpecific/software_version"][
-                    ()
-                ].decode()
+            self.detector_config.detector_countrate_correction_cutoff = int(cutoff)
+
+            software_version = self._get_hdf5_value(
+                hf, "/entry/instrument/detector/detectorSpecific/software_version"
             )
-            self.detector_config.eiger_fw_version = str(
-                hf["/entry/instrument/detector/detectorSpecific/eiger_fw_version"][
-                    ()
-                ].decode()
+            if isinstance(software_version, bytes):
+                self.detector_config.software_version = str(software_version.decode())
+
+            eiger_fw_version = self._get_hdf5_value(
+                hf, "/entry/instrument/detector/detectorSpecific/eiger_fw_version"
             )
+            if isinstance(eiger_fw_version, bytes):
+                self.detector_config.eiger_fw_version = str(eiger_fw_version.decode())
+
         except KeyError:
             logging.warning(
                 "Detector configuration could not be loaded. Using detector "
@@ -158,8 +181,8 @@ class ZmqStream:
         self,
         hdf5_file_path: str,
         compression: str,
-        number_of_datafiles: int | None = None,
-    ) -> list[dict]:
+        number_of_datafiles: int,
+    ) -> None:
         """
         Creates a list of compressed frames from a hdf5 file
 
@@ -181,22 +204,18 @@ class ZmqStream:
 
         Returns
         -------
-        frame_list : list[dict]
-            A list containing a dictionary of compressed frames, and
-            frame metadata
+        None
         """
         self.hdf5_file_path = hdf5_file_path
         self.compression = compression
         self.number_of_data_files = number_of_datafiles
 
         with h5py.File(hdf5_file_path, mode="r") as hdf5_file:
-            keys = list(hdf5_file["entry"]["data"].keys())
-
-            if number_of_datafiles is None:
-                self.number_of_data_files = len(keys)
+            raw_data_group = self._get_hdf5_group(hdf5_file, "/entry/data")
+            keys = list(raw_data_group.keys())
 
             datafile_list: list[npt.NDArray] = [
-                np.array(hdf5_file["entry"]["data"][keys[i]])
+                np.array(raw_data_group[keys[i]])
                 for i in range(self.number_of_data_files)
             ]
 

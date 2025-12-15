@@ -65,10 +65,10 @@ class ZMQStartMessage(BaseModel):
     saturation_value: int | None = 33000  # TODO: check where this value comes from
     sensor_material: str = "Si"
     sensor_thickness: float = 4.5e-04
-    series_id: int | None = 0
-    series_unique_id: str | None = 0
+    series_id: int = 0
+    series_unique_id: str = "0"
     threshold_energy: dict = {"threshold_1": 6350}
-    user_data: dict | None = {}
+    user_data: dict | str | None = ""
     virtual_pixel_interpolation_enabled: bool = True
 
 
