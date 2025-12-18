@@ -8,6 +8,7 @@ from ...schemas.configuration import (
     SimplonRequestFloat,
     SimplonRequestInt,
     SimplonRequestStr,
+    TriggerMode,
 )
 from ...simulate_zmq_stream import zmq_start_message, zmq_stream
 
@@ -327,9 +328,14 @@ async def put_threshold_energy(input: SimplonRequestDict):
 # threshold / difference / upper_threshold
 
 
-# @router.put("/trigger_mode")
 @router.get("/trigger_mode")
 async def get_trigger_mode():
+    return {"value": zmq_stream.detector_config.detector_trigger_mode}
+
+
+@router.put("/trigger_mode")
+async def put_trigger_mode(input: TriggerMode):
+    zmq_stream.detector_config.detector_trigger_mode = input.value
     return {"value": zmq_stream.detector_config.detector_trigger_mode}
 
 

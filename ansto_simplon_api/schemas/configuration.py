@@ -4,6 +4,10 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 
+class TriggerMode(BaseModel):
+    value: Literal["ints", "inte", "exts", "exte", "eies", "extg"]
+
+
 class ROIMode(BaseModel):
     value: Literal["disabled", "4M"]
 
