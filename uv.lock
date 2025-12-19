@@ -22,7 +22,7 @@ wheels = [
 
 [[package]]
 name = "ansto-simplon-api"
-version = "0.3.10"
+version = "0.3.12"
 source = { editable = "." }
 dependencies = [
     { name = "bitshuffle" },
