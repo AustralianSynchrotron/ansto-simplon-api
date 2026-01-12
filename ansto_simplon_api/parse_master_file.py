@@ -113,6 +113,15 @@ class Parse:
             )
             saturation_value = 33000
         try:
+            omega_range_average = self.parse("omega_range_average")
+        except KeyError:
+            logging.warning(
+                "omega_range_average was not found in the master file. "
+                "Setting omega increment to 1.0"
+            )
+            omega_range_average = 1.0
+
+        try:
             omega_dataset = self.hf.get("/entry/sample/goniometer/omega")
             if omega_dataset is not None:
                 # If it's a dataset, convert to numpy array and extract the first value
@@ -150,7 +159,7 @@ class Parse:
             "frame_time": self.parse("frame_time"),
             "goniometer": {
                 "omega": {
-                    "increment": self.parse("omega_range_average"),
+                    "increment": omega_range_average,
                     # Needs to get the first item of a list, so can't use parse
                     "start": start_value,
                 },
