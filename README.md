@@ -1,19 +1,7 @@
 # ANSTO Sim-Plon API
 A simulated Dectris Simplon API. Aims to have the same RESTlike interface and produce a ZMQ stream of data from an input Hdf5 file.
-The input HDF5 file is defined by the environment variable `AS_HDF5_MASTER_FILE`, e.g. `AS_HDF5_MASTER_FILE=/path/to/HDF5_masterfile.h5`
 
-Currently generates a [Stream V2] release compatible ZMQ stream.
-
-## Setup
-
-**Simulated Simplon API Configuration**
-
-   To run the simulated Simplon API, you need to specify the path of an HDF5 master file using the `AS_HDF5_MASTER_FILE` environment variable. You can also configure other parameters using the following environment variables:
-
-   - `AS_DELAY_BETWEEN_FRAMES`: Specifies the delay between frames in seconds (default: 0.01 s). This number can be modified via the `/ansto_endpoints/delay_between_frames` endpoint.
-   - `AS_NUMBER_OF_DATA_FILES`: Sets the number of data files from the master file loaded into memory (default: 1). The number of datafiles can be additionally modified when loading a new master file using the
-   `/ansto_endpoints/hdf5_master_file` endpoint.
-   - The number of frames per trigger is set automatically to the number of frames in the master file. This can be modified by using the `/detector/api/1.8.0/config/nimages` endpoint.
+Supports both [Stream V2] and `Legacy` ZMQ stream formats.
 
 ## Running the simulated SIMPLON API
 
@@ -22,7 +10,15 @@ You can build and run the app by simply running:
 ```bash
 docker compose up --detach
 ```
-The app's behavior can be modified by setting environment variables in the `docker-compose.yml` file
+The app's behavior can be optionally modified by setting environment variables in the `docker-compose.yml` file
+
+The following environment variables can be configured:
+
+- `AS_DELAY_BETWEEN_FRAMES`: Specifies the delay between frames in seconds (default: 0.01 s). This number can be modified during runtime via the `/ansto_endpoints/delay_between_frames` endpoint.
+
+- `AS_NUMBER_OF_DATA_FILES`: Sets the number of data files from the master file loaded into memory (default: 1). This can be updated when loading a new master file via the `/ansto_endpoints/hdf5_master_file endpoint`.
+
+- `AS_HDF5_MASTER_FILE`: The absolute path to an HDF5 master file. If unset, the project's default master file is used. You can switch master files at runtime via the `/ansto_endpoints/hdf5_master_file` endpoint.
 
 ### Running the app locally
 
@@ -30,9 +26,9 @@ Follow these steps to run the app locally:
 
 1. **Install the Library**
 
-   You have two options to install the library:
-   - Using UV (Recommended): Run `uv sync`.
+   This repository uses [UV].
 
+   To install the dependencies run `uv sync`
      **Note**: For Ubuntu users, additionally install the following packages
      ```bash
       apt update
@@ -40,20 +36,12 @@ Follow these steps to run the app locally:
      ```
      For other operating systems, Install the equivalent libraries for `gcc` and `libhdf5-serial-dev`.
 
-2. **(Optional) Set the HDF5 File Path**
-
-   The master file used by simplon API can be specified via the `AS_HDF5_MASTER_FILE` environment variable:
-   ```bash
-   export AS_HDF5_MASTER_FILE=/path/to/HDF5_master_file
-   ```
-   If ``AS_HDF5_MASTER_FILE`` is not specified, the default master file included in this repo is used (`example_1_master.h5`)
-
-   Additionally, the master file can also be set dynamically during runtime using the ANSTO endpoints:
-   `/ansto_endpoints/hdf5_master_file` (see the swagger documentation for more information)
+   The same environment variables described in the `docker` section can be updated if necessary.
 
 3. **Run the FAST-API application**
-      ```bash
+   ```bash
    uvicorn ansto_simplon_api.main:app
+   ```
 
 ## Example usage
 Once the simulated SIMPLON API is up and running, you can verify its functionality by:
@@ -61,18 +49,22 @@ Once the simulated SIMPLON API is up and running, you can verify its functionali
 1. **Starting the ZMQ Consumer**
 
 ```bash
-python examples/receiver.py
+python examples/cbor_stream/receiver.py
 ```
 
 2. **Triggering the detector**
 
 You can arm, trigger, and disarm the detector using the following script:
 ```bash
-python examples/trigger_detector.py
+python examples/cbor_stream/trigger_detector.py
 ```
 After running this script, you should see messages being received by the `receiver.py` script.
 
-[Stream V2]: https://github.com/dectris/documentation/tree/main/stream_v2
+`Legacy` ZMQ stream examples can be found in the `examples/legacy_stream/` folder.
+
 
 ## Documentation
 You can see the endpoints currently implemented by accessing the interactive API documentation at [http://localhost:8000/swagger](http://localhost:8000/swagger). Ensure that the simulated SIMPLON API is up and running to access the documentation.
+
+[Stream V2]: https://github.com/dectris/documentation/tree/main/stream_v2
+[UV]: https://docs.astral.sh/uv/
