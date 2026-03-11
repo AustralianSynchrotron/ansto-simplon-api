@@ -2,6 +2,10 @@ import requests
 
 REST = "http://0.0.0.0:8000"
 
+print(f"{'-' * 20} Configure stream format (cbor) {'-' * 20}")
+r = requests.put(f"{REST}/stream/api/1.8.0/config/format", json={"value": "cbor"})
+
+
 print(f"{'-' * 20} Configure number of images {'-' * 20}")
 nimages = {"value": 30}
 r = requests.put(f"{REST}/detector/api/1.8.0/config/nimages", json=nimages)

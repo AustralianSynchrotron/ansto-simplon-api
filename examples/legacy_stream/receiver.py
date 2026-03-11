@@ -1,4 +1,6 @@
-import json, zmq
+import json
+
+import zmq
 
 ctx = zmq.Context()
 s = ctx.socket(zmq.PULL)
