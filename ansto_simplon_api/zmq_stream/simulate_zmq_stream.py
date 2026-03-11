@@ -1,7 +1,5 @@
-import json
 import logging
 import struct
-import sys
 import time
 import uuid
 from copy import deepcopy
@@ -15,18 +13,12 @@ import h5py
 import hdf5plugin  # noqa
 import numpy as np
 import numpy.typing as npt
-import zmq
 from tqdm import trange
 
-from .config import get_settings
-from .parse_master_file import Parse
-from .schemas.configuration import DetectorConfiguration
-from .schemas.stream import (
-    CborStartMessage,
-    LegacyConfigHeader,
-    LegacyFrame,
-    StreamConfiguration,
-)
+from ..config import get_settings
+from ..parse_master_file import Parse
+from ..schemas.stream import LegacyFrame
+from .legacy_stream import LegacyStream, zmq_start_message
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,10 +27,9 @@ logging.basicConfig(
 )
 
 config = get_settings()
-zmq_start_message = CborStartMessage()
 
 
-class ZmqStream:
+class ZmqStream(LegacyStream):
     """
     Class used to stream data through a ZeroMQ stream by reading a HDF5 file.
     Frames are compressed using the bslz4 compression algorithms before they
@@ -70,27 +61,23 @@ class ZmqStream:
         None
         """
 
-        self.address = address
-        self.compression: Literal["bslz4", "none"] = "bslz4"
-        self.delay_between_frames = delay_between_frames
+        super().__init__(
+            compression="bslz4",
+            sequence_id=0,
+            number_of_frames_per_trigger=1,
+            delay_between_frames=delay_between_frames,
+            address=address,
+            user_data="",
+        )
+
         self.number_of_data_files = number_of_data_files
-
-        self.stream_config = StreamConfiguration()
-
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.PUSH)
-        self.socket.bind(self.address)
-
-        self.sequence_id = 0
 
         self.frame_id = 0
 
         self.image_number = 0  # used to mimic the dectris image number
 
-        self.user_data = ""  # an empty string is the real default value
         self.series_unique_id = None
         self.hdf5_file_path = hdf5_file_path
-        self.detector_config = DetectorConfiguration()
 
         self.create_list_of_compressed_frames(
             self.hdf5_file_path, self.compression, self.number_of_data_files
@@ -101,75 +88,6 @@ class ZmqStream:
         logging.info(f"Compression type: {self.compression}")
         logging.info(f"Delay between frames (s): {self.delay_between_frames}")
         logging.info(f"Number of data files: {self.number_of_data_files}")
-
-    def _stream_enabled(self) -> bool:
-        """Checks if the stream is enabled
-
-        Returns
-        -------
-        bool
-            True if the stream is enabled, False otherwise
-        """
-        return self.stream_config.mode == "enabled"
-
-    def _json_dumps_bytes(self, input: dict) -> bytes:
-        """Dumps a dict to json and encodes it to bytes.
-        Used only for the legacy stream format.
-
-        Parameters
-        ----------
-        input : dict
-            The dictionary to be dumped and encoded
-
-        Returns
-        -------
-        bytes
-            The encoded object
-        """
-        return json.dumps(input).encode()
-
-    def _endian_marker(self, dtype: np.dtype) -> Literal["<", ">"]:
-        """
-        Determines the endian marker for a given numpy dtype.
-        Used only for the legacy stream format
-
-        Parameters
-        ----------
-        dtype : np.dtype
-            A numpy dtype
-
-        Returns
-        -------
-        Literal["<", ">"]
-            The endian marker
-        """
-        if dtype.byteorder in ("<", ">"):
-            return dtype.byteorder
-
-        if sys.byteorder == "little":
-            return "<"
-        else:
-            return ">"
-
-    def _legacy_encoding(self, dtype: np.dtype) -> str:
-        """From the simplon api docs, the legacy encoding follows the format:
-
-        "[bs<BIT>][[-]lz4][<|>]".
-
-        e.g. "bs16-lz4<", "lz4<", "<".
-        """
-
-        bits = int(dtype.itemsize) * 8
-        endian = self._endian_marker(dtype)
-
-        if self.compression == "bslz4":
-            return f"bs{bits}-lz4{endian}"
-        if self.compression == "none":
-            return endian
-        else:
-            raise NotImplementedError(
-                f"The allowed compression types are bslz4 and none, not {self.compression}"
-            )
 
     def _update_zmq_start_message(self) -> None:
         """
@@ -477,107 +395,6 @@ class ZmqStream:
 
         return image_contents
 
-    def _legacy_stream_start_message(self) -> None:
-        self.series_unique_id = str(uuid.uuid4())
-
-        header = {
-            "htype": "dheader-1.0",
-            "series": self.sequence_id,
-            "header_detail": "basic",
-            "header_appendix": self.user_data,
-        }
-
-        config_header = LegacyConfigHeader(
-            beam_center_x=zmq_start_message.beam_center_x,
-            beam_center_y=zmq_start_message.beam_center_y,
-            count_time=zmq_start_message.count_time,
-            frame_time=zmq_start_message.frame_time,
-            nimages=int(self.number_of_frames_per_trigger),
-            ntrigger=1,
-            compression=self.compression,
-            bit_depth_image=self.detector_config.detector_bit_depth_image,
-            bit_depth_readout=self.detector_config.detector_bit_depth_readout,
-            pixel_mask_applied=self.detector_config.pixel_mask_applied,
-            roi_mode=self.detector_config.roi_mode,
-            software_version=self.detector_config.software_version,
-            detector_readout_time=self.detector_config.detector_readout_time,
-            x_pixels_in_detector=zmq_start_message.image_size_x,
-            y_pixels_in_detector=zmq_start_message.image_size_y,
-        )
-
-        self.socket.send_multipart(
-            [
-                self._json_dumps_bytes(header),
-                self._json_dumps_bytes(config_header.model_dump()),
-            ]
-        )
-
-    def _legacy_stream_frames(self) -> None:
-        """
-        Sends frames through a ZMQ stream using the legacy stream format.
-
-        Returns
-        -------
-        None
-        """
-        logging.info(f"Sending LEGACY frames to {self.address}")
-        start_time = time.time()
-        count_time = zmq_start_message.count_time
-
-        for _ in trange(self.number_of_frames_per_trigger):
-            time.sleep(self.delay_between_frames)
-            try:
-                frame = self.legacy_frames[self.frame_id]
-            except IndexError:
-                self.frame_id = 0
-                frame = self.legacy_frames[self.frame_id]
-
-            p1 = {
-                "htype": "dimage-1.0",
-                "series": self.sequence_id,
-                "frame": int(self.image_number),
-                "hash": "",
-            }
-            p2 = {
-                "htype": "dimage_d-1.0",
-                "shape": [
-                    int(zmq_start_message.image_size_x),
-                    int(zmq_start_message.image_size_y),
-                ],
-                "encoding": frame.encoding,
-                "type": frame.dtype,
-                "size": int(frame.size),
-            }
-
-            start_nano = int((start_time + self.image_number * count_time) * 1e9)
-            stop_nano = int(
-                (start_time + (self.image_number + 1) * count_time) * 1e9
-            )
-            p4 = {
-                "htype": "dconfig-1.0",
-                "start_time": start_nano,
-                "stop_time": stop_nano,
-                "real_time": int(stop_nano - start_nano),
-            }
-
-            self.socket.send_multipart(
-                [
-                    self._json_dumps_bytes(p1),
-                    self._json_dumps_bytes(p2),
-                    frame.data,
-                    self._json_dumps_bytes(p4),
-                ]
-            )
-            self.frame_id += 1
-            self.image_number += 1
-
-        frame_rate = self.number_of_frames_per_trigger / (time.time() - start_time)
-        logging.info(f"Frame rate: {frame_rate} frames / s")
-
-    def _legacy_stream_end_message(self) -> None:
-        header = {"htype": "dseries_end-1.0", "series": self.sequence_id}
-        self.socket.send(self._json_dumps_bytes(header))
-
     def stream_frames(self, compressed_image_list: list[dict] | None = None) -> None:
         """Send images through a ZeroMQ stream
 
@@ -595,7 +412,7 @@ class ZmqStream:
             return
 
         if self.stream_config.format == "legacy":
-            self._legacy_stream_frames()
+            self._legacy_stream_frames(self.legacy_frames)
             return
 
         if compressed_image_list is None:

@@ -10,7 +10,7 @@ from ...schemas.configuration import (
     SimplonRequestStr,
     TriggerMode,
 )
-from ...simulate_zmq_stream import zmq_start_message, zmq_stream
+from ...zmq_stream.simulate_zmq_stream import zmq_start_message, zmq_stream
 
 router = APIRouter(prefix="/detector/api/1.8.0/config", tags=["Detector Configuration"])
 

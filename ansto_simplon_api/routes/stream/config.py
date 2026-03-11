@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from ...schemas.configuration import SimplonRequestAny, StreamFormat, StreamMode
-from ...simulate_zmq_stream import zmq_stream
+from ...zmq_stream.simulate_zmq_stream import zmq_stream
 
 router = APIRouter(prefix="/stream/api/1.8.0/config", tags=["Stream Configuration"])
 

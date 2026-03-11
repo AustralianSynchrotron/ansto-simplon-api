@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from ...simulate_zmq_stream import zmq_stream
+from ...zmq_stream.simulate_zmq_stream import zmq_stream
 
 router = APIRouter(prefix="/detector/api/1.8.0/command", tags=["Detector Command"])
 

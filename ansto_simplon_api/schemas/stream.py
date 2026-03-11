@@ -4,7 +4,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-class CborStartMessage(BaseModel):
+class ZMQStartMessage(BaseModel):
     """Cbor start message schema"""
 
     type: str = "start"

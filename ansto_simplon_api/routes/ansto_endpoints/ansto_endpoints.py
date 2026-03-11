@@ -7,7 +7,7 @@ from starlette import status
 from ...schemas.ansto_endpoints import LoadHDF5File
 from ...schemas.configuration import SimplonRequestFloat
 from ...schemas.status import detector_state
-from ...simulate_zmq_stream import zmq_stream
+from ...zmq_stream.simulate_zmq_stream import zmq_stream
 
 router = APIRouter(prefix="/ansto_endpoints", tags=["ANSTO Endpoints"])
 
