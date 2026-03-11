@@ -102,19 +102,47 @@ class ZmqStream:
         logging.info(f"Delay between frames (s): {self.delay_between_frames}")
         logging.info(f"Number of data files: {self.number_of_data_files}")
 
-    def _should_stream(self) -> bool:
+    def _stream_enabled(self) -> bool:
+        """Checks if the stream is enabled
+
+        Returns
+        -------
+        bool
+            True if the stream is enabled, False otherwise
+        """
         return self.stream_config.mode == "enabled"
 
-    @staticmethod
-    def _json_dumps_bytes(obj: object) -> bytes:
-        def _default(v: object):
-            if isinstance(v, datetime):
-                return v.isoformat()
-            return str(v)
+    def _json_dumps_bytes(self, input: dict) -> bytes:
+        """Dumps a dict to json and encodes it to bytes.
+        Used only for the legacy stream format.
 
-        return json.dumps(obj, default=_default).encode()
+        Parameters
+        ----------
+        input : dict
+            The dictionary to be dumped and encoded
+
+        Returns
+        -------
+        bytes
+            The encoded object
+        """
+        return json.dumps(input).encode()
 
     def _endian_marker(self, dtype: np.dtype) -> Literal["<", ">"]:
+        """
+        Determines the endian marker for a given numpy dtype.
+        Used only for the legacy stream format
+
+        Parameters
+        ----------
+        dtype : np.dtype
+            A numpy dtype
+
+        Returns
+        -------
+        Literal["<", ">"]
+            The endian marker
+        """
         if dtype.byteorder in ("<", ">"):
             return dtype.byteorder
 
@@ -557,7 +585,7 @@ class ZmqStream:
         -------
         None
         """
-        if not self._should_stream():
+        if not self._stream_enabled():
             return
 
         if self.stream_config.format == "legacy":
@@ -614,7 +642,7 @@ class ZmqStream:
         -------
         None
         """
-        if not self._should_stream():
+        if not self._stream_enabled():
             return
 
         if self.stream_config.format == "legacy":
@@ -641,7 +669,7 @@ class ZmqStream:
         None
         """
 
-        if not self._should_stream():
+        if not self._stream_enabled():
             return
 
         if self.stream_config.format == "legacy":
