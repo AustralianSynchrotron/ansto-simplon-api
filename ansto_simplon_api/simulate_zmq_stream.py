@@ -1,6 +1,7 @@
 import json
 import logging
 import struct
+import sys
 import time
 import uuid
 from copy import deepcopy
@@ -113,13 +114,31 @@ class ZmqStream:
 
         return json.dumps(obj, default=_default).encode()
 
-    def _legacy_encoding(self) -> str:
+    @staticmethod
+    def _endian_marker(dtype: np.dtype) -> Literal["<", ">"]:
+        if dtype.byteorder in ("<", ">"):
+            return dtype.byteorder
+        return "<" if sys.byteorder == "little" else ">"
+
+    def _legacy_encoding(self, dtype: np.dtype) -> str:
+        """From the simplon api docs, the legacy encoding follows the format:
+
+        "[bs<BIT>][[-]lz4][<|>]".
+
+        e.g. "bs16-lz4<", "lz4<", "<".
+        """
+
+        bits = int(dtype.itemsize) * 8
+        endian = self._endian_marker(dtype)
+
         if self.compression == "bslz4":
-            return "bs16-lz4<"
+            return f"bs{bits}-lz4{endian}"
         if self.compression == "none":
-            # Not a standard Eiger encoding, but useful for simulations.
-            return "raw<"
-        return str(self.compression)
+            return endian
+        else:
+            raise NotImplementedError(
+                f"The allowed compression types are bslz4 and none, not {self.compression}"
+            )
 
     def _update_zmq_start_message(self) -> None:
         """
@@ -316,7 +335,7 @@ class ZmqStream:
 
         frame_list = []
         legacy_frame_list: list[LegacyFrame] = []
-        legacy_encoding = self._legacy_encoding()
+        legacy_encoding = self._legacy_encoding(np.dtype(dtype))
 
         for jj in range(self.number_of_data_files):
             logging.info(f"Loading data file {jj}:")
