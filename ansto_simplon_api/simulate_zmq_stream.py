@@ -513,10 +513,16 @@ class ZmqStream:
         )
 
     def _legacy_stream_frames(self) -> None:
+        """
+        Sends frames through a ZMQ stream using the legacy stream format.
+
+        Returns
+        -------
+        None
+        """
         logging.info(f"Sending LEGACY frames to {self.address}")
-        t = time.time()
-        start_epoch = time.time()
-        count_time_s = float(zmq_start_message.count_time)
+        start_time = time.time()
+        count_time = zmq_start_message.count_time
 
         for _ in trange(self.number_of_frames_per_trigger):
             time.sleep(self.delay_between_frames)
@@ -543,9 +549,9 @@ class ZmqStream:
                 "size": int(frame.size),
             }
 
-            start_nano = int((start_epoch + self.image_number * count_time_s) * 1e9)
+            start_nano = int((start_time + self.image_number * count_time) * 1e9)
             stop_nano = int(
-                (start_epoch + (self.image_number + 1) * count_time_s) * 1e9
+                (start_time + (self.image_number + 1) * count_time) * 1e9
             )
             p4 = {
                 "htype": "dconfig-1.0",
@@ -565,7 +571,7 @@ class ZmqStream:
             self.frame_id += 1
             self.image_number += 1
 
-        frame_rate = self.number_of_frames_per_trigger / (time.time() - t)
+        frame_rate = self.number_of_frames_per_trigger / (time.time() - start_time)
         logging.info(f"Frame rate: {frame_rate} frames / s")
 
     def _legacy_stream_end_message(self) -> None:
