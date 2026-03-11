@@ -1,10 +1,9 @@
-import logging
 import json
+import logging
 import struct
 import time
 import uuid
 from copy import deepcopy
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
@@ -20,7 +19,13 @@ from tqdm import trange
 
 from .config import get_settings
 from .parse_master_file import Parse
-from .schemas.configuration import DetectorConfiguration, StreamConfiguration, ZMQStartMessage
+from .schemas.configuration import (
+    DetectorConfiguration,
+    LegacyConfigHeader,
+    LegacyFrame,
+    StreamConfiguration,
+    ZMQStartMessage,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -32,19 +37,12 @@ config = get_settings()
 zmq_start_message = ZMQStartMessage()
 
 
-@dataclass(frozen=True, slots=True)
-class LegacyFrame:
-    data: bytes
-    dtype: str
-    encoding: str
-    size: int
-
-
 class ZmqStream:
     """
     Class used to stream data through a ZeroMQ stream by reading a HDF5 file.
-    Frames are compressed using the lz4 or bslz4 compression algorithms before they
-    are sent through the ZeroMQ stream
+    Frames are compressed using the bslz4 compression algorithms before they
+    are sent through the ZeroMQ stream.
+    Both legacy and CBOR stream formats are supported.
     """
 
     def __init__(
@@ -76,7 +74,6 @@ class ZmqStream:
         self.delay_between_frames = delay_between_frames
         self.number_of_data_files = number_of_data_files
 
-        # Stream (ZMQ) subsystem configuration. Exposed via /stream/... endpoints.
         self.stream_config = StreamConfiguration()
 
         self.context = zmq.Context()
@@ -440,27 +437,29 @@ class ZmqStream:
             "header_appendix": self.user_data,
         }
 
-        # Basic header: include a config-like dict with detector parameters.
-        config_header = {
-            "beam_center_x": zmq_start_message.beam_center_x,
-            "beam_center_y": zmq_start_message.beam_center_y,
-            "count_time": zmq_start_message.count_time,
-            "frame_time": zmq_start_message.frame_time,
-            "nimages": int(self.number_of_frames_per_trigger),
-            "ntrigger": 1,
-            "compression": self.compression,
-            "bit_depth_image": self.detector_config.detector_bit_depth_image,
-            "bit_depth_readout": self.detector_config.detector_bit_depth_readout,
-            "pixel_mask_applied": self.detector_config.pixel_mask_applied,
-            "roi_mode": self.detector_config.roi_mode,
-            "software_version": self.detector_config.software_version,
-            "detector_readout_time": self.detector_config.detector_readout_time,
-            "x_pixels_in_detector": zmq_start_message.image_size_x,
-            "y_pixels_in_detector": zmq_start_message.image_size_y,
-        }
+        config_header = LegacyConfigHeader(
+            beam_center_x=zmq_start_message.beam_center_x,
+            beam_center_y=zmq_start_message.beam_center_y,
+            count_time=zmq_start_message.count_time,
+            frame_time=zmq_start_message.frame_time,
+            nimages=int(self.number_of_frames_per_trigger),
+            ntrigger=1,
+            compression=self.compression,
+            bit_depth_image=self.detector_config.detector_bit_depth_image,
+            bit_depth_readout=self.detector_config.detector_bit_depth_readout,
+            pixel_mask_applied=self.detector_config.pixel_mask_applied,
+            roi_mode=self.detector_config.roi_mode,
+            software_version=self.detector_config.software_version,
+            detector_readout_time=self.detector_config.detector_readout_time,
+            x_pixels_in_detector=zmq_start_message.image_size_x,
+            y_pixels_in_detector=zmq_start_message.image_size_y,
+        )
 
         self.socket.send_multipart(
-            [self._json_dumps_bytes(header), self._json_dumps_bytes(config_header)]
+            [
+                self._json_dumps_bytes(header),
+                self._json_dumps_bytes(config_header.model_dump()),
+            ]
         )
 
     def _legacy_stream_frames(self) -> None:
@@ -485,14 +484,19 @@ class ZmqStream:
             }
             p2 = {
                 "htype": "dimage_d-1.0",
-                "shape": [int(zmq_start_message.image_size_x), int(zmq_start_message.image_size_y)],
+                "shape": [
+                    int(zmq_start_message.image_size_x),
+                    int(zmq_start_message.image_size_y),
+                ],
                 "encoding": frame.encoding,
                 "type": frame.dtype,
                 "size": int(frame.size),
             }
 
             start_nano = int((start_epoch + self.image_number * count_time_s) * 1e9)
-            stop_nano = int((start_epoch + (self.image_number + 1) * count_time_s) * 1e9)
+            stop_nano = int(
+                (start_epoch + (self.image_number + 1) * count_time_s) * 1e9
+            )
             p4 = {
                 "htype": "dconfig-1.0",
                 "start_time": start_nano,

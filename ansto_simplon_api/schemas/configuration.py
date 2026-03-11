@@ -15,8 +15,10 @@ class ROIMode(BaseModel):
 class Compression(BaseModel):
     value: Literal["bslz4", "none"]
 
+
 class StreamFormat(BaseModel):
     value: Literal["cbor", "legacy"]
+
 
 class StreamMode(BaseModel):
     value: Literal["enabled", "disabled"]
@@ -110,3 +112,28 @@ class DetectorConfiguration(BaseModel):
 class StreamConfiguration(BaseModel):
     format: Literal["cbor", "legacy"] = "cbor"
     mode: Literal["enabled", "disabled"] = "enabled"
+
+
+class LegacyFrame(BaseModel):
+    data: bytes
+    dtype: str
+    encoding: str
+    size: int
+
+
+class LegacyConfigHeader(BaseModel):
+    beam_center_x: float
+    beam_center_y: float
+    count_time: float
+    frame_time: float
+    nimages: int
+    ntrigger: int
+    compression: Literal["bslz4", "none"]
+    bit_depth_image: int
+    bit_depth_readout: int
+    pixel_mask_applied: bool
+    roi_mode: Literal["disabled", "4M"]
+    software_version: str
+    detector_readout_time: float
+    x_pixels_in_detector: int
+    y_pixels_in_detector: int
