@@ -15,6 +15,12 @@ class ROIMode(BaseModel):
 class Compression(BaseModel):
     value: Literal["bslz4", "none"]
 
+class StreamFormat(BaseModel):
+    value: Literal["cbor", "legacy"]
+
+class StreamMode(BaseModel):
+    value: Literal["enabled", "disabled"]
+
 
 class SimplonRequestInt(BaseModel):
     value: int
