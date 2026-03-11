@@ -46,60 +46,45 @@ count = 0
 
 while True:
     parts = socket.recv_multipart()
-    if not parts:
-        continue
-
-    try:
-        hdr = json.loads(parts[0].decode())
-    except Exception:
-        logging.warning("Received non-JSON first part")
-        continue
-
-    htype = hdr.get("htype")
+    header = json.loads(parts[0].decode())
+    htype = header["htype"]
 
     if htype == "dheader-1.0":
         logging.info("-" * 80)
         logging.info("LEGACY start (dheader)")
-        logging.info(hdr)
+        logging.info(header)
         if len(parts) >= 2:
-            try:
-                cfg = json.loads(parts[1].decode())
-                logging.info(cfg)
-            except Exception:
-                logging.info("<config header not JSON>")
+            detector_config = json.loads(parts[1].decode())
+            logging.info(f"Detector configuration: {detector_config}")
         count = 0
-        continue
 
-    if htype == "dseries_end-1.0":
+    elif htype == "dseries_end-1.0":
         logging.info("-" * 80)
         logging.info("LEGACY end (dseries_end)")
-        logging.info(hdr)
+        logging.info(header)
         count = 0
-        continue
 
-    if htype == "dimage-1.0" and len(parts) == 4:
-        p1 = hdr
-        p2 = json.loads(parts[1].decode())
-        frame_blob = parts[2]
-        p4 = json.loads(parts[3].decode())
+    elif htype == "dimage-1.0" and len(parts) == 4:
+        part_1 = header  # frame header with series/frame numbers
+        part_2 = json.loads(parts[1].decode())  # frame metadata
+        part_3 = parts[2]  # raw frame bytes
+        part_4 = json.loads(parts[3].decode())  # frame timing info
 
         logging.info("-" * 80)
-        logging.info(f"series: {p1.get('series')} frame: {p1.get('frame')}")
+        logging.info(f"series: {part_1['series']} frame: {part_1['frame']}")
 
         image = decompress_legacy_frame(
-            encoding=str(p2.get("encoding")),
-            frame_bytes=frame_blob,
-            shape_xy=p2.get("shape", [0, 0]),
-            dtype_str=str(p2.get("type", "uint16")),
+            encoding=str(part_2["encoding"]),
+            frame_bytes=part_3,
+            shape_xy=part_2["shape"],
+            dtype_str=str(part_2["type"]),
         )
         count += 1
         logging.info(
-            "Processed %d frames; image shape=%s dtype=%s real_time=%s",
-            count,
-            tuple(image.shape),
-            str(image.dtype),
-            p4.get("real_time"),
+            f"Processed {count} frames, image shape={image.shape}, "
+            f"dtype={image.dtype}, real_time={part_4['real_time']}"
         )
-        continue
-
-    logging.info(f"{htype} parts={len(parts)}")
+    else:
+        logging.info(
+            f"Received unknown message with htype: {htype} and {len(parts)} parts"
+        )
