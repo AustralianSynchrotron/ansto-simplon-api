@@ -16,9 +16,9 @@ import numpy.typing as npt
 from tqdm import trange
 
 from ..config import get_settings
-from ..parse_master_file import Parse
 from ..schemas.stream import LegacyFrame
 from .legacy_stream import LegacyStream, zmq_start_message
+from .parse_master_file import Parse
 
 logging.basicConfig(
     level=logging.INFO,
