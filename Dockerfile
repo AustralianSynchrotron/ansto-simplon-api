@@ -1,5 +1,5 @@
-FROM  python:3.11
-ENV UV_VERSION=0.8.15
+FROM  python:3.14
+ENV UV_VERSION=0.10.9
 # Install OS packages
 USER root
 RUN apt update && apt-get install -y gcc libhdf5-serial-dev
@@ -20,4 +20,4 @@ RUN uv sync
 USER asuser
 
 EXPOSE 8000 5555
-ENTRYPOINT uv run uvicorn ansto_simplon_api.main:app --host 0.0.0.0 --port 8000
+ENTRYPOINT ["uv", "run", "uvicorn", "ansto_simplon_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
