@@ -114,11 +114,14 @@ class ZmqStream:
 
         return json.dumps(obj, default=_default).encode()
 
-    @staticmethod
-    def _endian_marker(dtype: np.dtype) -> Literal["<", ">"]:
+    def _endian_marker(self, dtype: np.dtype) -> Literal["<", ">"]:
         if dtype.byteorder in ("<", ">"):
             return dtype.byteorder
-        return "<" if sys.byteorder == "little" else ">"
+
+        if sys.byteorder == "little":
+            return "<"
+        else:
+            return ">"
 
     def _legacy_encoding(self, dtype: np.dtype) -> str:
         """From the simplon api docs, the legacy encoding follows the format:
