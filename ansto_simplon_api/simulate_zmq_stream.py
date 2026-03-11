@@ -19,12 +19,12 @@ from tqdm import trange
 
 from .config import get_settings
 from .parse_master_file import Parse
-from .schemas.configuration import (
-    DetectorConfiguration,
+from .schemas.configuration import DetectorConfiguration
+from .schemas.stream import (
+    CborStartMessage,
     LegacyConfigHeader,
     LegacyFrame,
     StreamConfiguration,
-    ZMQStartMessage,
 )
 
 logging.basicConfig(
@@ -34,7 +34,7 @@ logging.basicConfig(
 )
 
 config = get_settings()
-zmq_start_message = ZMQStartMessage()
+zmq_start_message = CborStartMessage()
 
 
 class ZmqStream:
