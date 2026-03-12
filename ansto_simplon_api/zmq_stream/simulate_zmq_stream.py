@@ -261,8 +261,6 @@ class ZmqStream(LegacyStream):
                 for i in range(self.number_of_data_files)
             ]
 
-            # Would make more sense in the __init__ section
-            # but then we'd need to read the file twice
             self.start_message, self.image_message, self.end_message = Parse(
                 hdf5_file
             ).header()
