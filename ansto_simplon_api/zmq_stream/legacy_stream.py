@@ -24,6 +24,10 @@ zmq_start_message = ZMQStartMessage()
 
 
 class LegacyStream:
+    """
+    A class to handle the Dectris legacy stream format for the ZMQ stream
+    """
+
     def __init__(
         self,
         compression: Literal["bslz4", "none"],
@@ -33,6 +37,22 @@ class LegacyStream:
         address: str,
         user_data: str | dict,
     ):
+        """
+        Parameters
+        ----------
+        compression : Literal["bslz4", "none"]
+            The compression type. Allowed values are "bslz4" and "none".
+        sequence_id : int
+            The sequence id
+        number_of_frames_per_trigger : int
+            The number of frames to be sent per trigger
+        delay_between_frames : float
+            The delay between frames in seconds
+        address : str
+            The ZMQ address
+        user_data : str | dict
+            The user data to be sent in the start message
+        """
         self.compression: Literal["bslz4", "none"] = compression
         self.sequence_id = sequence_id
         self.number_of_frames_per_trigger = number_of_frames_per_trigger
