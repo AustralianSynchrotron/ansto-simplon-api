@@ -19,7 +19,7 @@ def decompress_legacy_frame(
     frame_bytes: bytes,
 ) -> npt.NDArray:
     """
-    Decompresses a frame from the legacy stream
+    Decompresses a frame from the legacy stream. Uncompressed and bslz4 is supported
 
     Parameters
     ----------
@@ -95,7 +95,6 @@ while True:
         part_2 = json.loads(parts[1].decode())  # frame metadata
         part_3 = parts[2]  # raw frame bytes
         part_4 = json.loads(parts[3].decode())  # frame timing info
-
         logging.info("-" * 80)
         logging.info(f"series: {part_1['series']} frame: {part_1['frame']}")
 
