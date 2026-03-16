@@ -1,10 +1,11 @@
 import json
 import logging
+import re
 
-import bitshuffle
 import numpy as np
 import numpy.typing as npt
 import zmq
+from dectris.compression import decompress
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,12 +27,21 @@ def decompress_legacy_frame(
 
     if encoding in ("<", ">"):
         # uncompressed frame
-        return np.frombuffer(frame_bytes, dtype=dtype).reshape(shape_yx)
+        return np.frombuffer(frame_bytes, dtype=dtype.newbyteorder(encoding)).reshape(
+            shape_yx
+        )
 
-    if encoding.startswith("bs") and "lz4" in encoding:
-        # bslz4 compressed frame
-        comp = np.frombuffer(frame_bytes, dtype=np.uint8)
-        return bitshuffle.decompress_lz4(comp, shape_yx, dtype)
+    match = re.fullmatch(r"bs(\d+)-lz4([<>])", encoding)
+    if match is not None:
+        element_size = int(match.group(1)) // 8
+        endian = "<" if match.group(2) == "<" else ">"
+        decompressed_bytes = decompress(
+            frame_bytes,
+            "bslz4",
+            elem_size=element_size,
+        )
+        dtype = dtype.newbyteorder(endian)
+        return np.frombuffer(decompressed_bytes, dtype=dtype).reshape(shape_yx)
 
     raise NotImplementedError(f"Unsupported encoding: {encoding}")
 

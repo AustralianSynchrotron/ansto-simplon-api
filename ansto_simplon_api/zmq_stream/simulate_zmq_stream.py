@@ -297,12 +297,18 @@ class ZmqStream(LegacyStream):
                     image_contents = self.create_image_cbor_object(
                         image, str(dtype), array_shape
                     )
+                    legacy_image = self.create_dectris_compression_payload(
+                        image,
+                        element_size=int(dtype.itemsize),
+                        shape=array_shape,
+                    )
 
                 elif compression.lower() == "none":
                     image = datafile_list[jj][ii].tobytes()
                     image_contents = self.create_image_cbor_object(
                         image, str(dtype), array_shape, compressed_image=False
                     )
+                    legacy_image = image
                 else:
                     raise NotImplementedError(
                         "The allowed compression types are lz4, bslz4 and "
@@ -311,10 +317,10 @@ class ZmqStream(LegacyStream):
 
                 legacy_frame_list.append(
                     LegacyFrame(
-                        data=image,
+                        data=legacy_image,
                         dtype=str(dtype),
                         encoding=legacy_encoding,
-                        size=len(image),
+                        size=len(legacy_image),
                     )
                 )
 
@@ -329,6 +335,36 @@ class ZmqStream(LegacyStream):
         del datafile_list
         self.frames = frame_list
         self.legacy_frames = legacy_frame_list
+
+    def create_dectris_compression_payload(
+        self,
+        image: bytes,
+        element_size: int,
+        shape: tuple[int, int],
+    ) -> bytes:
+        """
+        Adds the Dectris compression header to a compressed payload.
+        This is used for both cbor and legacy stream formats.
+
+        Parameters
+        ----------
+        image : bytes
+            The compressed image in bytes format
+        element_size : int
+            The element size, e.g. 4 for uint32
+        shape : tuple[int, int]
+            The (x,y) shape of the image
+
+        Returns
+        -------
+        bytes
+            The compressed image with the Dectris compression header
+        """
+        bytes_number_of_elements = struct.pack(
+            ">q", (shape[0] * shape[1] * element_size)
+        )
+        bytes_block_size = b"\x00\x00 \x00"
+        return bytes_number_of_elements + bytes_block_size + image
 
     def create_image_cbor_object(
         self,
@@ -378,14 +414,11 @@ class ZmqStream(LegacyStream):
         if not compressed_image:
             return cbor2.CBORTag(tag, image)
 
-        bytes_number_of_elements = struct.pack(
-            ">q", (shape[0] * shape[1] * element_size)
+        byte_array = self.create_dectris_compression_payload(
+            image,
+            element_size=element_size,
+            shape=shape,
         )
-        # TODO: There's probably a way to write the bytes_block_size with
-        # the struct library
-        bytes_block_size = b"\x00\x00 \x00"
-
-        byte_array = bytes_number_of_elements + bytes_block_size + image
 
         image_obj = cbor2.CBORTag(56500, [self.compression, element_size, byte_array])
 
