@@ -5,11 +5,21 @@ REST = "http://0.0.0.0:8000"
 print(f"{'-' * 20} Configure stream format (legacy) {'-' * 20}")
 r = requests.put(f"{REST}/stream/api/1.8.0/config/format", json={"value": "legacy"})
 
+r = requests.put(f"{REST}/stream/api/1.8.0/config/mode", json={"value": "enabled"})
+print("stream enabled:", r.text)
+
+r = requests.put(
+    f"{REST}/stream/api/1.8.0/config/header_detail", json={"value": "basic"}
+)
+print("header detail:", r.text)
+
+
 print(f"{'-' * 20} Configure number of images {'-' * 20}")
-nimages = {"value": 30}
+nimages = {"value": 1}
 r = requests.put(f"{REST}/detector/api/1.8.0/config/nimages", json=nimages)
 print(r.text)
 
+# TODO: the user data may have to be a string for the legacy stream, not dict
 print(f"{'-' * 20} Add user data {'-' * 20}")
 user_data = {
     "value": {
