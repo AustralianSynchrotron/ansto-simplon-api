@@ -15,35 +15,30 @@ logging.basicConfig(
 
 
 def decompress_legacy_frame(
-    encoding: str,
+    frame_metadata: dict,
     frame_bytes: bytes,
-    shape_xy: list[int] | tuple[int, int],
-    dtype_str: str,
 ) -> npt.NDArray:
     """
     Decompresses a frame from the legacy stream
 
     Parameters
     ----------
-    encoding : str
-        The encoding of the frame, e.g. "<"
+    frame_metadata : dict
+        The frame metadata (part 2 of the `dimage-1.0` message)
     frame_bytes : bytes
         The compressed frame bytes
-    shape_xy : list[int] | tuple[int, int]
-        The (x,y) shape of the image
-    dtype_str : str
-        The data type of the image, e.g. "<u4"
 
     Returns
     -------
     npt.NDArray
         A decompressed frame
     """
-    dtype = np.dtype(dtype_str)
+    dtype = np.dtype(frame_metadata["type"])
 
-    x, y = int(shape_xy[0]), int(shape_xy[1])
+    x, y = int(frame_metadata["shape"][0]), int(frame_metadata["shape"][1])
     shape_yx = (y, x)
 
+    encoding = frame_metadata["encoding"]
     if encoding in ("<", ">"):
         # uncompressed frame
         return np.frombuffer(frame_bytes, dtype=dtype.newbyteorder(encoding)).reshape(
@@ -105,10 +100,8 @@ while True:
         logging.info(f"series: {part_1['series']} frame: {part_1['frame']}")
 
         image = decompress_legacy_frame(
-            encoding=str(part_2["encoding"]),
+            frame_metadata=part_2,
             frame_bytes=part_3,
-            shape_xy=part_2["shape"],
-            dtype_str=str(part_2["type"]),
         )
         count += 1
         logging.info(
