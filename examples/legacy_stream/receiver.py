@@ -20,6 +20,25 @@ def decompress_legacy_frame(
     shape_xy: list[int] | tuple[int, int],
     dtype_str: str,
 ) -> npt.NDArray:
+    """
+    Decompresses a frame from the legacy stream
+
+    Parameters
+    ----------
+    encoding : str
+        The encoding of the frame, e.g. "<"
+    frame_bytes : bytes
+        The compressed frame bytes
+    shape_xy : list[int] | tuple[int, int]
+        The (x,y) shape of the image
+    dtype_str : str
+        The data type of the image, e.g. "<u4"
+
+    Returns
+    -------
+    npt.NDArray
+        A decompressed frame
+    """
     dtype = np.dtype(dtype_str)
 
     x, y = int(shape_xy[0]), int(shape_xy[1])
@@ -31,6 +50,8 @@ def decompress_legacy_frame(
             shape_yx
         )
 
+    # detector encoding is in a format e.g. `bs32-lz4<` for
+    # bslz4 with 32-bit and little-endian order
     match = re.fullmatch(r"bs(\d+)-lz4([<>])", encoding)
     if match is not None:
         element_size = int(match.group(1)) // 8
