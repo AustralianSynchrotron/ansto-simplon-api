@@ -89,7 +89,7 @@ class LegacyConfigHeader(StreamBase):
     phi_start: float
     photon_energy: float
     pixel_mask_applied: bool
-    roi_mode: Literal["disabled", "4M"]
+    roi_mode: Literal["", "disabled", "4M"]  # TODO: check V1 roi modes, default is ""
     threshold_energy: float
     trigger_mode: str
     two_theta_increment: float
