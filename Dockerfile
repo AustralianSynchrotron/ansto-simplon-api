@@ -13,7 +13,7 @@ COPY pyproject.toml uv.lock README.md /home/asuser/
 COPY ansto_simplon_api /home/asuser/ansto_simplon_api
 
 RUN pip install uv==${UV_VERSION}
-RUN uv sync
+RUN uv sync --no-dev
 
 
 # Copy across source code
