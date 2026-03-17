@@ -1,5 +1,6 @@
 FROM  python:3.14
 ENV UV_VERSION=0.10.9
+ENV PATH="/home/asuser/.venv/bin:${PATH}"
 # Install OS packages
 USER root
 RUN apt update && apt-get install -y gcc libhdf5-serial-dev
@@ -8,16 +9,12 @@ RUN apt update && apt-get install -y gcc libhdf5-serial-dev
 RUN useradd -ms /bin/bash asuser
 WORKDIR /home/asuser/
 
-# Setup Poetry environment
-COPY pyproject.toml uv.lock README.md /home/asuser/
-COPY ansto_simplon_api /home/asuser/ansto_simplon_api
+COPY --chown=asuser:asuser pyproject.toml uv.lock README.md /home/asuser/
+COPY --chown=asuser:asuser ansto_simplon_api /home/asuser/ansto_simplon_api
 
 RUN pip install uv==${UV_VERSION}
+USER asuser
 RUN uv sync --no-dev
 
-
-# Copy across source code
-USER asuser
-
 EXPOSE 8000 5555
-ENTRYPOINT ["uv", "run", "uvicorn", "ansto_simplon_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["uvicorn", "ansto_simplon_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
