@@ -1,12 +1,12 @@
 [project]
 name = "ansto-simplon-api"
-version = "0.3.13"
+version = "0.4.0"
 description = "Simulated simplon api"
 authors = [
     { name = "Francisco Hernandez Vivanco", email = "hernandf@ansto.gov.au" },
     { name = "Daniel Eriksson", email = "daniele@ansto.gov.au" },
 ]
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11"
 readme = "README.md"
 dependencies = [
     "fastapi[standard]>=0.114.0,<1.000.0",
@@ -31,7 +31,11 @@ Repository = "https://github.com/AustralianSynchrotron/ansto-simplon-api"
 Documentation = "https://github.com/AustralianSynchrotron/ansto-simplon-api"
 
 [dependency-groups]
-dev = ["pre-commit==3.8.0"]
+dev = [
+    "pre-commit>=3.8.0",
+    "redis>=7.3.0",
+    "matplotlib>=3.10.8",
+    ]
 
 [build-system]
 requires = ["hatchling"]

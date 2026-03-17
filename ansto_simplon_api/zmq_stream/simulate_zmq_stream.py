@@ -13,12 +13,12 @@ import h5py
 import hdf5plugin  # noqa
 import numpy as np
 import numpy.typing as npt
-import zmq
 from tqdm import trange
 
-from .config import get_settings
+from ..config import get_settings
+from ..schemas.stream import LegacyFrame
+from .legacy_stream import LegacyStream, zmq_start_message
 from .parse_master_file import Parse
-from .schemas.configuration import DetectorConfiguration, ZMQStartMessage
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,14 +27,14 @@ logging.basicConfig(
 )
 
 config = get_settings()
-zmq_start_message = ZMQStartMessage()
 
 
-class ZmqStream:
+class ZmqStream(LegacyStream):
     """
     Class used to stream data through a ZeroMQ stream by reading a HDF5 file.
-    Frames are compressed using the lz4 or bslz4 compression algorithms before they
-    are sent through the ZeroMQ stream
+    Frames are compressed using the bslz4 compression algorithms before they
+    are sent through the ZeroMQ stream.
+    Both legacy and CBOR stream formats are supported.
     """
 
     def __init__(
@@ -61,25 +61,23 @@ class ZmqStream:
         None
         """
 
-        self.address = address
-        self.compression: Literal["bslz4", "none"] = "bslz4"
-        self.delay_between_frames = delay_between_frames
+        super().__init__(
+            compression="bslz4",
+            sequence_id=0,
+            number_of_frames_per_trigger=1,
+            delay_between_frames=delay_between_frames,
+            address=address,
+            user_data="",
+        )
+
         self.number_of_data_files = number_of_data_files
-
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.PUSH)
-        self.socket.bind(self.address)
-
-        self.sequence_id = 0
 
         self.frame_id = 0
 
         self.image_number = 0  # used to mimic the dectris image number
 
-        self.user_data = ""  # an empty string is the real default value
         self.series_unique_id = None
         self.hdf5_file_path = hdf5_file_path
-        self.detector_config = DetectorConfiguration()
 
         self.create_list_of_compressed_frames(
             self.hdf5_file_path, self.compression, self.number_of_data_files
@@ -263,8 +261,6 @@ class ZmqStream:
                 for i in range(self.number_of_data_files)
             ]
 
-            # Would make more sense in the __init__ section
-            # but then we'd need to read the file twice
             self.start_message, self.image_message, self.end_message = Parse(
                 hdf5_file
             ).header()
@@ -285,6 +281,8 @@ class ZmqStream:
         zmq_start_message.image_dtype = str(dtype)
 
         frame_list = []
+        legacy_frame_list: list[LegacyFrame] = []
+        legacy_encoding = self._legacy_encoding(np.dtype(dtype))
 
         for jj in range(self.number_of_data_files):
             logging.info(f"Loading data file {jj}:")
@@ -299,17 +297,32 @@ class ZmqStream:
                     image_contents = self.create_image_cbor_object(
                         image, str(dtype), array_shape
                     )
+                    legacy_image = self.create_dectris_compression_payload(
+                        image,
+                        element_size=int(dtype.itemsize),
+                        shape=array_shape,
+                    )
 
                 elif compression.lower() == "none":
                     image = datafile_list[jj][ii].tobytes()
                     image_contents = self.create_image_cbor_object(
                         image, str(dtype), array_shape, compressed_image=False
                     )
+                    legacy_image = image
                 else:
                     raise NotImplementedError(
                         "The allowed compression types are lz4, bslz4 and "
                         f"no_compression, not {compression}"
                     )
+
+                legacy_frame_list.append(
+                    LegacyFrame(
+                        data=legacy_image,
+                        dtype=str(dtype),
+                        encoding=legacy_encoding,
+                        size=len(legacy_image),
+                    )
+                )
 
                 data = cbor2.CBORTag(40, [array_shape, image_contents])
                 image_message["data"]["threshold_1"] = data
@@ -321,6 +334,37 @@ class ZmqStream:
         logging.info(f"Number of unique frames: {len(frame_list)}")
         del datafile_list
         self.frames = frame_list
+        self.legacy_frames = legacy_frame_list
+
+    def create_dectris_compression_payload(
+        self,
+        image: bytes,
+        element_size: int,
+        shape: tuple[int, int],
+    ) -> bytes:
+        """
+        Adds the Dectris compression header to a compressed payload.
+        This is used for both cbor and legacy stream formats.
+
+        Parameters
+        ----------
+        image : bytes
+            The compressed image in bytes format
+        element_size : int
+            The element size, e.g. 4 for uint32
+        shape : tuple[int, int]
+            The (x,y) shape of the image
+
+        Returns
+        -------
+        bytes
+            The compressed image with the Dectris compression header
+        """
+        bytes_number_of_elements = struct.pack(
+            ">q", (shape[0] * shape[1] * element_size)
+        )
+        bytes_block_size = b"\x00\x00 \x00"
+        return bytes_number_of_elements + bytes_block_size + image
 
     def create_image_cbor_object(
         self,
@@ -370,14 +414,11 @@ class ZmqStream:
         if not compressed_image:
             return cbor2.CBORTag(tag, image)
 
-        bytes_number_of_elements = struct.pack(
-            ">q", (shape[0] * shape[1] * element_size)
+        byte_array = self.create_dectris_compression_payload(
+            image,
+            element_size=element_size,
+            shape=shape,
         )
-        # TODO: There's probably a way to write the bytes_block_size with
-        # the struct library
-        bytes_block_size = b"\x00\x00 \x00"
-
-        byte_array = bytes_number_of_elements + bytes_block_size + image
 
         image_obj = cbor2.CBORTag(56500, [self.compression, element_size, byte_array])
 
@@ -385,18 +426,29 @@ class ZmqStream:
 
         return image_contents
 
-    def stream_frames(self, compressed_image_list: list[dict]) -> None:
+    def stream_frames(self, compressed_image_list: list[dict] | None = None) -> None:
         """Send images through a ZeroMQ stream
 
         Parameters
         ----------
-        compressed_image_list : list[dict]
-            A list of dictionaries containing compressed frames and metadata
+        compressed_image_list : list[dict] | None
+            A list of dictionaries containing CBOR stream2 image messages.
+            Ignored when `stream_config.format == "legacy"`.
 
         Returns
         -------
         None
         """
+        if not self._stream_enabled():
+            return
+
+        if self.stream_config.format == "legacy":
+            self._legacy_stream_frames(self.legacy_frames)
+            return
+
+        if compressed_image_list is None:
+            compressed_image_list = self.frames
+
         logging.info(f"Sending frames to {self.address}")
         t = time.time()
         for _ in trange(self.number_of_frames_per_trigger):
@@ -444,6 +496,13 @@ class ZmqStream:
         -------
         None
         """
+        if not self._stream_enabled():
+            return
+
+        if self.stream_config.format == "legacy":
+            self._legacy_stream_start_message()
+            return
+
         self.series_unique_id = str(uuid.uuid4())
 
         logging.info(f"Sending start message to {self.address}")
@@ -463,6 +522,13 @@ class ZmqStream:
         -------
         None
         """
+
+        if not self._stream_enabled():
+            return
+
+        if self.stream_config.format == "legacy":
+            self._legacy_stream_end_message()
+            return
 
         logging.info(f"Sending end message to {self.address}")
         self.end_message["series_id"] = self.sequence_id
