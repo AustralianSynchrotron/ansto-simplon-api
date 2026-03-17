@@ -1,6 +1,6 @@
 [project]
 name = "ansto-simplon-api"
-version = "0.3.13"
+version = "0.4.0"
 description = "Simulated simplon api"
 authors = [
     { name = "Francisco Hernandez Vivanco", email = "hernandf@ansto.gov.au" },
@@ -32,7 +32,7 @@ Documentation = "https://github.com/AustralianSynchrotron/ansto-simplon-api"
 
 [dependency-groups]
 dev = [
-    "pre-commit==3.8.0",
+    "pre-commit>=3.8.0",
     "redis>=7.3.0",
     "matplotlib>=3.10.8",
     ]
