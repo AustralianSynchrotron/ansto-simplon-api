@@ -31,7 +31,11 @@ Repository = "https://github.com/AustralianSynchrotron/ansto-simplon-api"
 Documentation = "https://github.com/AustralianSynchrotron/ansto-simplon-api"
 
 [dependency-groups]
-dev = ["pre-commit==3.8.0"]
+dev = [
+    "pre-commit==3.8.0",
+    "redis>=7.3.0",
+    "matplotlib>=3.10.8",
+    ]
 
 [build-system]
 requires = ["hatchling"]
