@@ -20,6 +20,10 @@ The following environment variables can be configured:
 
 - `AS_HDF5_MASTER_FILE`: The absolute path to an HDF5 master file. If unset, the project's default master file is used. You can switch master files at runtime via the `/ansto_endpoints/hdf5_master_file` endpoint.
 
+- `AS_FRAME_SOURCE`: Sets the initial frame source at startup. Allowed values are `hdf5` and `dynamic-frame` (default: `hdf5`).
+
+- `AS_DYNAMIC_FRAME_ENABLED`: Controls whether dynamic-frame routes are exposed (default: `false`). If enabled, the app requires the `pyFAI` library.
+
 ### Running the app locally
 
 Follow these steps to run the app locally:
@@ -61,6 +65,21 @@ python examples/cbor_stream/trigger_detector.py
 After running this script, you should see messages being received by the `receiver.py` script.
 
 `Legacy` ZMQ stream examples can be found in the `examples/legacy_stream/` folder.
+
+## Optional dynamic-frame source (CBOR only)
+
+This project can optionally stream generated images instead of HDF5-backed images.
+
+- Install optional dependency:
+   - `uv sync --extra dynamic-frame`
+- Dynamic-frame routes are mounted only when allowed by `AS_DYNAMIC_FRAME_ENABLED` and `pyFAI` availability.
+- Default frame source is `hdf5`.
+- To boot directly into dynamic-frame mode, set `AS_FRAME_SOURCE=dynamic-frame`.
+- Switch source via ANSTO endpoint:
+   - `PUT /ansto_endpoints/dynamic_frame/source` with payload `{ "value": "dynamic-frame" }`
+   - `PUT /ansto_endpoints/dynamic_frame/source` with payload `{ "value": "hdf5" }`
+- Dynamic frames are cached and regenerated only when relevant detector geometry or wavelength changes.
+- Dynamic-frame source is currently supported only for `cbor` stream format.
 
 
 ## Documentation

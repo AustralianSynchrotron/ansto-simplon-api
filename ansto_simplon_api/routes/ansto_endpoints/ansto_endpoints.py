@@ -5,6 +5,7 @@ from fastapi.exceptions import HTTPException
 from starlette import status
 
 from ...schemas.ansto_endpoints import LoadHDF5File
+from ...config import FrameSourceEnum
 from ...schemas.configuration import SimplonRequestFloat
 from ...schemas.status import detector_state
 from ...zmq_stream.simulate_zmq_stream import zmq_stream
@@ -30,6 +31,7 @@ async def set_master_file(hdf5_model: LoadHDF5File):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(ex)
         ) from ex
+    zmq_stream.set_frame_source(FrameSourceEnum.HDF5)
     zmq_stream.frame_id = 0
     zmq_stream.image_number = 0
     return {"value": zmq_stream.hdf5_file_path}

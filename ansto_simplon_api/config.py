@@ -1,5 +1,8 @@
+from enum import StrEnum
 from functools import lru_cache
-from os.path import dirname as os_dirname, join as os_joinpath, realpath as os_realpath
+from os.path import dirname as os_dirname
+from os.path import join as os_joinpath
+from os.path import realpath as os_realpath
 from pathlib import Path
 from typing import Annotated, Self
 
@@ -44,6 +47,11 @@ class APISettings(BaseSettings):
     )
 
 
+class FrameSourceEnum(StrEnum):
+    HDF5 = "hdf5"
+    DYNAMIC_FRAME = "dynamic-frame"
+
+
 class ZMQStreamSettings(BaseSettings):
     """ZMQ Stream Settings"""
 
@@ -67,6 +75,14 @@ class ZMQStreamSettings(BaseSettings):
     NUMBER_OF_DATA_FILES: int = Field(
         title="Number of Data Files",
         default=1,
+    )
+    FRAME_SOURCE: FrameSourceEnum = Field(
+        title="Initial Stream Frame Source",
+        default=FrameSourceEnum.HDF5,
+    )
+    DYNAMIC_FRAME_ENABLED: bool = Field(
+        title="Expose Dynamic Frame Routes",
+        default=False,
     )
 
 

@@ -1,3 +1,6 @@
+import importlib
+import importlib.util
+
 from fastapi import FastAPI
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.logger import logger
@@ -13,6 +16,19 @@ from .routes.status.status import router as status
 from .routes.stream.config import router as stream_config
 
 config = get_settings()
+
+
+def _should_enable_dynamic_frame_routes() -> bool:
+    if not config.DYNAMIC_FRAME_ENABLED:
+        return False
+
+    has_pyfai = importlib.util.find_spec("pyFAI") is not None
+    if not has_pyfai:
+        raise RuntimeError(
+            "AS_DYNAMIC_FRAME_ENABLED is true but pyFAI is not installed"
+        )
+
+    return True
 
 
 _description: str
@@ -47,6 +63,12 @@ app.include_router(stream_config)
 app.include_router(detector_config)
 app.include_router(status)
 app.include_router(ansto_endpoints)
+
+if _should_enable_dynamic_frame_routes():
+    dynamic_module = importlib.import_module(
+        "ansto_simplon_api.routes.ansto_endpoints.dynamic_frame"
+    )
+    app.include_router(dynamic_module.router)
 
 
 @app.get("/")
