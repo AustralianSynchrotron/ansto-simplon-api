@@ -100,19 +100,58 @@ script.
 
 ## Optional dynamic-frame source (CBOR only)
 
-This project can optionally stream generated images instead of HDF5-backed images.
+This project can optionally stream generated ring images (pyFAI LaB6 calibrant)
+instead of HDF5-backed static images.
 
 - Install optional dependency:
    - `uv sync --extra dynamic-frame`
 - For Docker builds, see the dynamic-frame docker-compose example above
-  (includes `UV_SYNC_EXTRA="--extra dynamic-frame"`).
+   (includes `UV_SYNC_EXTRA="--extra dynamic-frame"`).
 - Dynamic-frame enablement and startup behavior are described in the Docker/config
    section above.
-- Switch source via ANSTO endpoint:
-   - `PUT /ansto_endpoints/dynamic_frame/source` with payload `{ "value": "dynamic-frame" }`
-   - `PUT /ansto_endpoints/dynamic_frame/source` with payload `{ "value": "hdf5" }`
-- Dynamic frames are cached and regenerated only when relevant detector geometry or wavelength changes.
-- Dynamic-frame source is currently supported only for `cbor` stream format.
+- Dynamic-frame source is supported only for `cbor` stream format.
+
+### Dynamic-frame quick start
+
+1. Set stream format to CBOR:
+    - `PUT /stream/api/1.8.0/config/format` with `{ "value": "cbor" }`
+2. Switch frame source to dynamic-frame:
+    - `PUT /ansto_endpoints/dynamic_frame/source` with `{ "value": "dynamic-frame" }`
+3. Change one or more detector geometry values below and trigger acquisition.
+
+### Parameters that visibly change the rings
+
+These endpoints update metadata used by the dynamic image generator:
+
+- Beam center X:
+   - `PUT /detector/api/1.8.0/config/beam_center_x`
+- Beam center Y:
+   - `PUT /detector/api/1.8.0/config/beam_center_y`
+- Detector distance:
+   - `PUT /detector/api/1.8.0/config/detector_distance`
+- Detector description (changes pyFAI detector selection):
+   - `PUT /detector/api/1.8.0/config/description`
+- Pixel sizes:
+   - `PUT /detector/api/1.8.0/config/x_pixel_size`
+   - `PUT /detector/api/1.8.0/config/y_pixel_size`
+- Image size:
+   - `PUT /detector/api/1.8.0/config/x_pixels_in_detector`
+   - `PUT /detector/api/1.8.0/config/y_pixels_in_detector`
+- Compression (forces dynamic-frame cache refresh):
+   - `PUT /detector/api/1.8.0/config/compression`
+
+### Cache and current limitations
+
+- Dynamic frames are cached and regenerated when key parameters change.
+- Cache key currently includes: incident wavelength, beam center X/Y, detector
+   distance, image size X/Y, image dtype, detector description, and compression.
+- `incident_wavelength` and `image_dtype` are currently not directly exposed as
+   dedicated REST endpoints in this API.
+- `PUT /detector/api/1.8.0/config/photon_energy` updates both `incident_energy` and
+   `incident_wavelength` used by dynamic-frame generation.
+- Source switching endpoint:
+   - `PUT /ansto_endpoints/dynamic_frame/source` with `{ "value": "dynamic-frame" }`
+   - `PUT /ansto_endpoints/dynamic_frame/source` with `{ "value": "hdf5" }`
 
 
 ## Documentation

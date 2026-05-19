@@ -1,4 +1,6 @@
 from fastapi import APIRouter
+from fastapi.exceptions import HTTPException
+from starlette import status
 
 from ...schemas.configuration import (
     Compression,
@@ -252,7 +254,15 @@ async def get_photon_energy():
 
 @router.put("/photon_energy")
 async def put_photon_energy(input: SimplonRequestFloat):
+    if input.value <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="photon_energy must be greater than zero",
+        )
+
     zmq_start_message.incident_energy = input.value
+    # Convert energy in eV to wavelength in Angstrom.
+    zmq_start_message.incident_wavelength = 12398.419843320025 / input.value
     return {"value": zmq_start_message.incident_energy}
 
 
