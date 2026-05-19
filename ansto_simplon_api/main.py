@@ -1,4 +1,3 @@
-import importlib
 import importlib.util
 
 from fastapi import FastAPI
@@ -24,6 +23,7 @@ def _should_enable_dynamic_frame_routes() -> bool:
 
     has_pyfai = importlib.util.find_spec("pyFAI") is not None
     if not has_pyfai:
+        # alternatively, we can coerce DYNAMIC_FRAME_ENABLED to False, and log the exception.
         raise RuntimeError(
             "AS_DYNAMIC_FRAME_ENABLED is true but pyFAI is not installed"
         )
@@ -65,10 +65,9 @@ app.include_router(status)
 app.include_router(ansto_endpoints)
 
 if _should_enable_dynamic_frame_routes():
-    dynamic_module = importlib.import_module(
-        "ansto_simplon_api.routes.ansto_endpoints.dynamic_frame"
-    )
-    app.include_router(dynamic_module.router)
+    from .routes.ansto_endpoints.dynamic_frame import router as dynamic_frame
+
+    app.include_router(dynamic_frame)
 
 
 @app.get("/")
