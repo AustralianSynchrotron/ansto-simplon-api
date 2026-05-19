@@ -1,12 +1,5 @@
-networks:
-  adsnet:
-    name: h264-websocket-stream_default
-    external: true
-
 services:
   ansto-simplon-api:
-    networks:
-      - adsnet
     build:
       dockerfile: Dockerfile
       args:
