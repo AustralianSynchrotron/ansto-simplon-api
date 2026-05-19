@@ -9,7 +9,22 @@ from ..schemas.stream import ZMQStartMessage
 
 
 def sanitise_detector_name(detector_name: str) -> str:
-    """Normalise detector labels before passing them to pyFAI's factory."""
+    """Sanitise detector labels before passing them to pyFAI's factory.
+
+    pyFAI expects the detector name without the manufacturer, and only accepts sensor
+    for CdTe detectors, so we remove "Dectris" and "Si" from the detector description
+    to improve the chances of a successful match.
+
+    Parameters
+    ----------
+    detector_name : str
+        The name of the detector to be sanitised.
+
+    Returns
+    -------
+    str
+        The sanitised detector name.
+    """
     parts_to_remove = {"dectris", "si"}
 
     detector_name_parts = detector_name.strip().split()
@@ -24,8 +39,25 @@ def sanitise_detector_name(detector_name: str) -> str:
 def build_dynamic_frame_cache_key(
     start_message: ZMQStartMessage,
     compression: str,
-) -> tuple:
-    """Builds the cache key for generated dynamic frames."""
+) -> tuple[float, float, float, float, int, int, str, str, str]:
+    """Build the cache key for generated dynamic frames.
+
+    This is used to determine whether a previously generated dynamic frame can be reused
+    for a new stream, or if a new one needs to be generated.
+    Changing any of these parameters would result in a different dynamic frame.
+
+    Parameters
+    ----------
+    start_message : ZMQStartMessage
+        The ZMQStartMessage containing the metadata for the stream.
+    compression : str
+        The compression type used for the stream.
+
+    Returns
+    -------
+    tuple[float, float, float, float, int, int, str, str, str]
+        A tuple containing the cache key for the generated dynamic frame.
+    """
     detector_distance = float(start_message.detector_translation[2])
     return (
         float(start_message.incident_wavelength),
@@ -41,6 +73,18 @@ def build_dynamic_frame_cache_key(
 
 
 def _build_generic_detector_instance(start_message: ZMQStartMessage) -> Any:
+    """Build a generic pyFAI Detector instance from stream start metadata.
+
+    Parameters
+    ----------
+    start_message : ZMQStartMessage
+        The ZMQStartMessage containing the metadata for the stream.
+
+    Returns
+    -------
+    Detector
+        A pyFAI Detector instance built from the stream metadata.
+    """
     from pyFAI.detectors import Detector
 
     shape = (
@@ -65,7 +109,18 @@ def _build_generic_detector_instance(start_message: ZMQStartMessage) -> Any:
 
 
 def generate_dynamic_image(start_message: ZMQStartMessage) -> np.ndarray:
-    """Generates a pyFAI fake calibration image from stream start metadata."""
+    """Generate a pyFAI fake rings image from stream start metadata.
+
+    Parameters
+    ----------
+    start_message : ZMQStartMessage
+        The ZMQStartMessage containing the metadata for the stream.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D numpy array containing the generated image.
+    """
     from pyFAI import detector_factory
     from pyFAI.calibrant import get_calibrant
     from pyFAI.integrator.azimuthal import AzimuthalIntegrator
