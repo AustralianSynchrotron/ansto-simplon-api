@@ -96,6 +96,7 @@ class ZmqStream(LegacyStream):
             self.create_list_of_compressed_frames(
                 self.hdf5_file_path, self.compression, self.number_of_data_files
             )
+            logging.info(f"Number of data files: {self.number_of_data_files}")
         else:
             if not self._dynamic_frame_available():
                 raise RuntimeError(
@@ -103,11 +104,10 @@ class ZmqStream(LegacyStream):
                 )
             self._load_master_stream_messages(self.hdf5_file_path)
 
-        logging.info(f"ZMQ Address: {self.address}")
         logging.info(f"Hdf5 file path: {self.hdf5_file_path}")
+        logging.info(f"ZMQ Address: {self.address}")
         logging.info(f"Compression type: {self.compression}")
         logging.info(f"Delay between frames (s): {self.delay_between_frames}")
-        logging.info(f"Number of data files: {self.number_of_data_files}")
 
     def _load_master_stream_messages(self, hdf5_file_path: str | Path) -> None:
         """Load stream2 message templates from the master file metadata."""
@@ -132,7 +132,7 @@ class ZmqStream(LegacyStream):
 
     def _get_hdf5_value(self, hf: h5py.File, path: str) -> npt.NDArray | bytes:
         """
-        Gets a value from a hdf5 file
+        Gets a value from a hdf5 file.
 
         Parameters
         ----------
@@ -160,7 +160,7 @@ class ZmqStream(LegacyStream):
 
     def _get_hdf5_group(self, hf: h5py.File, path: str) -> h5py.Group:
         """
-        Gets a group from a hdf5 file
+        Gets a group from a hdf5 file.
 
         Parameters
         ----------
@@ -189,7 +189,7 @@ class ZmqStream(LegacyStream):
     def _update_detector_configuration(self, hf: h5py.File) -> None:
         """
         Updates the detector configuration by reading the detector
-        config from a hdf5 file
+        config from a hdf5 file.
 
         Parameters
         ----------
@@ -257,15 +257,15 @@ class ZmqStream(LegacyStream):
         number_of_datafiles: int,
     ) -> None:
         """
-        Creates a list of compressed frames from a hdf5 file
+        Creates a list of compressed frames from a hdf5 file.
 
         Parameters
         ----------
-        hdf5_file_path : str
+        hdf5_file_path : str | Path
             Path of the hdf5 file
         compression : str
-            Compression type. Accepted compression types are lz4 and bslz4.
-            Default value is bslz4
+            Compression type. Accepted compression types are "bslz4" or "none".
+            Default value is "bslz4"
         number_of_datafiles: int | None = None
             The number of datafiles loaded in memory. If number_of_datafiles=None,
             we load all datafiles specified in the master file
@@ -369,30 +369,61 @@ class ZmqStream(LegacyStream):
         self.legacy_frames = legacy_frame_list
 
     def set_frame_source(self, frame_source: FrameSourceEnum) -> None:
-        """Set the frame source used by stream_frames."""
-        # TODO only allow changing frame source if AS_DYNAMIC_FRAME_ENABLED is true
-        if (
-            frame_source == FrameSourceEnum.DYNAMIC_FRAME
-            and not self._dynamic_frame_available()
-        ):
-            raise RuntimeError(
-                "dynamic-frame mode requires pyFAI. Install optional dependency: "
-                "pip install 'ansto-simplon-api[dynamic-frame]'"
-            )
+        """Set the frame source used by stream_frames.
+
+        Parameters
+        ----------
+        frame_source : FrameSourceEnum
+            The frame source to be used by stream_frames.
+            Allowed values are FrameSourceEnum.HDF5 and FrameSourceEnum.DYNAMIC_FRAME.
+
+        Raises
+        ------
+        RuntimeError
+            If frame_source is set to FrameSourceEnum.DYNAMIC_FRAME but dynamic frames
+            are not available.
+
+        Returns
+        -------
+        None
+        """
+        if frame_source == FrameSourceEnum.DYNAMIC_FRAME:
+            if not config.DYNAMIC_FRAME_ENABLED:
+                logging.warning(
+                    "Cannot set frame source to 'dynamic-frame' because "
+                    "DYNAMIC_FRAME_ENABLED is False. Coercing to 'hdf5'."
+                )
+                frame_source = FrameSourceEnum.HDF5
+            elif not self._dynamic_frame_available():
+                # alternatively, we can also coerce HDF5 here and log the exception.
+                raise RuntimeError(
+                    "dynamic-frame mode requires pyFAI. Install optional dependency: "
+                    "pip install 'ansto-simplon-api[dynamic-frame]'"
+                )
 
         self.frame_source = frame_source
         self.frame_id = 0
 
     def _dynamic_frame_available(self) -> bool:
+        """Check if dynamic frame source is available by checking if pyFAI is installed."""
         return find_spec("pyFAI") is not None
 
-    def _current_dynamic_frame_cache_key(self) -> tuple:
-        return build_dynamic_frame_cache_key(
-            start_message=zmq_start_message,
-            compression=self.compression,
-        )
-
     def _build_dynamic_frame(self) -> dict:
+        """Build a dynamic frame by generating an image based on the current ZMQ start
+        message and applying the appropriate compression.
+
+        Raises
+        ------
+        NotImplementedError
+            If the compression type specified in the detector configuration is not
+            supported.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the dynamic frame, formatted as a stream2 image
+            message.
+        """
         dtype = np.dtype(zmq_start_message.image_dtype)
         image_array = generate_dynamic_image(zmq_start_message)
 
@@ -425,7 +456,21 @@ class ZmqStream(LegacyStream):
         return image_message
 
     def _get_dynamic_frame(self) -> dict:
-        key = self._current_dynamic_frame_cache_key()
+        """Get a dynamic frame.
+
+        Uses caching to avoid regenerating the same frame multiple times when
+        stream_frames is called multiple times with the same cache parameters.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the dynamic frame, formatted as a stream2 image
+            message.
+        """
+        key = build_dynamic_frame_cache_key(
+            start_message=zmq_start_message,
+            compression=self.compression,
+        )
         if (
             self._dynamic_frame_cache_key != key
             or self._dynamic_frame_cache_frame is None
@@ -437,6 +482,16 @@ class ZmqStream(LegacyStream):
         return dict(self._dynamic_frame_cache_frame)
 
     def _send_cbor_frame(self, frame: dict) -> None:
+        """Send a frame through the ZMQ stream with CBOR encoding.
+
+        Parameters
+        ----------
+        frame : dict
+            A dictionary containing the frame data, formatted as a stream2 image message.
+        Returns
+        -------
+        None
+        """
         frame["series_id"] = self.sequence_id
         frame["image_id"] = self.image_number
         frame["series_date"] = datetime.now(tz=timezone.utc)
@@ -448,6 +503,15 @@ class ZmqStream(LegacyStream):
         self.image_number += 1
 
     def _stream_dynamic_frames(self) -> None:
+        """Stream dynamic frames through the ZMQ stream.
+
+        This method generates frames dynamically based on the current ZMQ start message
+        and sends them through the ZMQ stream with the appropriate delay between frames.
+
+        Returns
+        -------
+        None
+        """
         logging.info(f"Sending dynamic frames to {self.address}")
         t = time.time()
 
@@ -550,7 +614,7 @@ class ZmqStream(LegacyStream):
         return image_contents
 
     def stream_frames(self, compressed_image_list: list[dict] | None = None) -> None:
-        """Send images through a ZeroMQ stream
+        """Send images through a ZeroMQ stream.
 
         Parameters
         ----------
@@ -568,7 +632,7 @@ class ZmqStream(LegacyStream):
         if self.stream_config.format == "legacy":
             if self.frame_source == FrameSourceEnum.DYNAMIC_FRAME:
                 raise RuntimeError(
-                    "dynamic-frame source is supported only when stream format is cbor"
+                    "dynamic-frame source is supported only when stream format is CBOR."
                 )
             self._legacy_stream_frames(self.legacy_frames)
             return
@@ -607,7 +671,7 @@ class ZmqStream(LegacyStream):
         if self.stream_config.format == "legacy":
             if self.frame_source == FrameSourceEnum.DYNAMIC_FRAME:
                 raise RuntimeError(
-                    "dynamic-frame source is supported only when stream format is cbor"
+                    "dynamic-frame source is supported only when stream format is CBOR."
                 )
             self._legacy_stream_start_message()
             return
@@ -638,7 +702,7 @@ class ZmqStream(LegacyStream):
         if self.stream_config.format == "legacy":
             if self.frame_source == FrameSourceEnum.DYNAMIC_FRAME:
                 raise RuntimeError(
-                    "dynamic-frame source is supported only when stream format is cbor"
+                    "dynamic-frame source is supported only when stream format is CBOR."
                 )
             self._legacy_stream_end_message()
             return
