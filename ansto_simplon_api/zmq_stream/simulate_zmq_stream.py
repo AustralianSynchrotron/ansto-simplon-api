@@ -221,7 +221,7 @@ class ZmqStream(LegacyStream):
             )
             if isinstance(compression, bytes):
                 compression_str = compression.decode()
-                if compression_str in ("bslz4", None):
+                if compression_str in ("bslz4", "none"):
                     self.detector_config.detector_compression = compression_str
 
             cutoff = self._get_hdf5_value(
