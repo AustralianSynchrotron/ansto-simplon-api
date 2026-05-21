@@ -1,9 +1,12 @@
+from enum import StrEnum
 from functools import lru_cache
-from os.path import dirname as os_dirname, join as os_joinpath, realpath as os_realpath
+from os.path import dirname as os_dirname
+from os.path import join as os_joinpath
+from os.path import realpath as os_realpath
 from pathlib import Path
 from typing import Annotated, Self
 
-from pydantic import Field, FilePath, GetPydanticSchema, SecretStr
+from pydantic import Field, FilePath, GetPydanticSchema, SecretStr, model_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -44,6 +47,11 @@ class APISettings(BaseSettings):
     )
 
 
+class FrameSourceEnum(StrEnum):
+    HDF5 = "hdf5"
+    DYNAMIC_FRAME = "dynamic-frame"
+
+
 class ZMQStreamSettings(BaseSettings):
     """ZMQ Stream Settings"""
 
@@ -68,6 +76,30 @@ class ZMQStreamSettings(BaseSettings):
         title="Number of Data Files",
         default=1,
     )
+    DYNAMIC_FRAME_ENABLED: bool = Field(
+        title="Expose Dynamic Frame Routes",
+        default=False,
+    )
+    FRAME_SOURCE: FrameSourceEnum = Field(
+        title="Initial Stream Frame Source",
+        default=FrameSourceEnum.HDF5,
+    )
+
+    @model_validator(mode="after")
+    def validate_dynamic_frame_enabled(self) -> Self:
+        """Coerce frame source to HDF5 if dynamic frame is disabled."""
+        if (
+            not self.DYNAMIC_FRAME_ENABLED
+            and self.FRAME_SOURCE == FrameSourceEnum.DYNAMIC_FRAME
+        ):
+            import logging
+
+            logging.warning(
+                "DYNAMIC_FRAME_ENABLED is False but FRAME_SOURCE was set to "
+                "'dynamic-frame'. Coercing FRAME_SOURCE to 'hdf5'."
+            )
+            self.FRAME_SOURCE = FrameSourceEnum.HDF5
+        return self
 
 
 class Settings(APISettings, ZMQStreamSettings):

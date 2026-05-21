@@ -1,0 +1,20 @@
+services:
+  ansto-simplon-api:
+    build:
+      dockerfile: Dockerfile
+      args:
+        UV_SYNC_EXTRA: "--extra dynamic-frame"
+    container_name: ansto-simplon-api
+    environment:
+      - "AS_ZMQ_ADDRESS=tcp://*:5555"
+      - "AS_DELAY_BETWEEN_FRAMES=0.5" # seconds
+      - "AS_NUMBER_OF_DATA_FILES=1"
+      - "AS_DYNAMIC_FRAME_ENABLED=true"
+      - "AS_FRAME_SOURCE=dynamic-frame"
+
+      # AS_HDF5_MASTER_FILE is an optional environment variable to specify the path to the HDF5 master file.
+      # If not set, the default master file included in this repo is used
+      # - "AS_HDF5_MASTER_FILE=/path/to/HDF5_master_file"
+    ports:
+      - "8000:8000"
+      - "5555:5555"

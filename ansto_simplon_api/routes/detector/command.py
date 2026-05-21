@@ -7,7 +7,7 @@ router = APIRouter(prefix="/detector/api/1.8.0/command", tags=["Detector Command
 
 @router.put("/trigger")
 def trigger():
-    zmq_stream.stream_frames(zmq_stream.frames)
+    zmq_stream.stream_frames()
 
 
 @router.put("/arm")

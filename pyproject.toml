@@ -1,6 +1,6 @@
 [project]
 name = "ansto-simplon-api"
-version = "0.4.0"
+version = "0.5.0"
 description = "Simulated simplon api"
 authors = [
     { name = "Francisco Hernandez Vivanco", email = "hernandf@ansto.gov.au" },
@@ -35,7 +35,15 @@ dev = [
     "pre-commit>=3.8.0",
     "redis>=7.3.0",
     "matplotlib>=3.10.8",
+    "ruff>=0.9.10",
+    "uv-sort~=0.6.0",
     ]
+
+[project.optional-dependencies]
+dynamic-frame = [
+    "pyfai==2026.03",
+]
+
 
 [build-system]
 requires = ["hatchling"]
