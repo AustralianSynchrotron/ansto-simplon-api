@@ -4,6 +4,8 @@ the beam center x coordinate is changed, to demonstrate the ability of the API t
 generate dynamic frames based on the current detector configuration.
 """
 
+import random
+
 import requests
 
 REST = "http://0.0.0.0:8000"
@@ -21,7 +23,7 @@ r = requests.put(f"{REST}/stream/api/1.8.0/config/header_appendix", json=user_da
 print(r.text)
 
 print(f"{'-' * 20} Configure number of images {'-' * 20}")
-nimages = {"value": 10}
+nimages = {"value": 1}
 r = requests.put(f"{REST}/detector/api/1.8.0/config/nimages", json=nimages)
 print(r.text)
 
@@ -31,7 +33,7 @@ print("sequence id:", r.json()["sequence id"])
 
 for _ in range(10):
     print(f"{'-' * 20} Change beam_center_x {'-' * 20}")
-    beam_center_x = {"value": 1500}
+    beam_center_x = {"value": random.randint(0, 2500)}
     r = requests.put(
         f"{REST}/detector/api/1.8.0/config/beam_center_x", json=beam_center_x
     )
@@ -42,7 +44,7 @@ for _ in range(10):
     print(r)
 
     print(f"{'-' * 20} Change beam_center_x {'-' * 20}")
-    beam_center_x = {"value": 500}
+    beam_center_x = {"value": random.randint(0, 2500)}
     r = requests.put(
         f"{REST}/detector/api/1.8.0/config/beam_center_x", json=beam_center_x
     )
