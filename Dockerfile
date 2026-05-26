@@ -1,4 +1,4 @@
-FROM  python:3.14
+FROM  python:3.11
 
 ARG UV_SYNC_EXTRA=""
 
